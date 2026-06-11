@@ -379,6 +379,7 @@ function App(){
   const[expandedBpId,setExpandedBpId]=useState(null);
   const[newTaskModal,setNewTaskModal]=useState(null);
   const[editDateId,setEditDateId]=useState(null);
+  const[mobileTab,setMobileTab]=useState("list");
   const isMobile=useWindowWidth()<768;
   const updBp=fn=>setBigProjects(bps=>bps.map(fn));
   const updTask=(tid,fn)=>setBigProjects(bps=>bps.map(bp=>({...bp,tasks:bp.tasks.map(t=>t.id===tid?fn(t):t)})));
@@ -500,6 +501,110 @@ function App(){
       </div>
     </div>
   );
+  const ganttMonthsEl=months.map((m,mi)=>{
+    const days=mDays[mi];
+    const isCurM=todayDate.getFullYear()===m.getFullYear()&&todayDate.getMonth()===m.getMonth();
+    const todayD=isCurM?todayDate.getDate()-1:-1;
+    const W=days*DAY_PX;
+    const rows=[];
+    bigProjects.forEach((bp,bpIdx)=>{
+      const bpColor=COLORS[bpIdx%COLORS.length];
+      const valid=bp.tasks.filter(t=>t.startDate&&t.endDate);
+      const bpS=valid.length?new Date(Math.min(...valid.map(t=>parseDate(t.startDate)))):null;
+      const bpE=valid.length?new Date(Math.max(...valid.map(t=>parseDate(t.endDate)))):null;
+      rows.push({type:"bp",bp,bpColor,bpS,bpE});
+      if(!bp.collapsed)bp.tasks.forEach(t=>rows.push({type:"task",t,bpColor}));
+    });
+    const DayCells=({total})=>Array.from({length:total},(_,d)=>{
+      const cd=new Date(m.getFullYear(),m.getMonth(),d+1);
+      const dow=cd.getDay(),isWE=dow===0||dow===6,isTD=d===todayD,isHD=isHoliday(cd);
+      return <div key={d} style={{position:"absolute",left:d*DAY_PX,top:0,width:DAY_PX,height:"100%",background:isTD?"#fef9c3":isHD?"#f0fdf4":isWE?"#fdf2f8":"transparent",borderRight:d===total-1?"none":"1px solid #f8fafc"}}/>;
+    });
+    return(
+      <div key={mi} style={{marginBottom:28,minWidth:LABEL_W+W}}>
+        <div style={{display:"flex",alignItems:"center",background:"#1e293b",color:"white",padding:"5px 12px",borderRadius:"6px 6px 0 0",fontSize:12,fontWeight:800,letterSpacing:".05em"}}>
+          {m.getFullYear()} 年 {m.getMonth()+1} 月
+          {isCurM&&<span style={{marginLeft:10,fontSize:9,background:"#ef4444",padding:"1px 7px",borderRadius:8,fontWeight:700}}>本月</span>}
+        </div>
+        <div style={{position:"relative",border:"1px solid #e2e8f0",borderTop:"none",borderRadius:"0 0 6px 6px",overflow:"hidden"}}>
+          {isCurM&&<div style={{position:"absolute",left:LABEL_W+todayD*DAY_PX+DAY_PX/2-1,top:0,bottom:0,width:2,background:"#ef4444",zIndex:20,pointerEvents:"none"}}/>}
+          <div style={{display:"flex",borderBottom:"2px solid #cbd5e1",background:"#f8fafc"}}>
+            <div style={{width:LABEL_W,flexShrink:0,display:"flex",alignItems:"center",paddingLeft:10,fontSize:9,fontWeight:700,color:"#64748b"}}>大專案 / 工程</div>
+            {Array.from({length:days},(_,d)=>{
+              const date=new Date(m.getFullYear(),m.getMonth(),d+1);
+              const dow=date.getDay(),isWE=dow===0||dow===6,isHD=isHoliday(date),isTD=d===todayD;
+              const bg=isTD?"#fef08a":isHD?"#dcfce7":isWE?"#fce7f3":"transparent";
+              const fc=isTD?"#b45309":isHD?"#16a34a":isWE?"#db2777":"#475569";
+              const wc=isTD?"#d97706":isHD?"#22c55e":isWE?"#ec4899":"#94a3b8";
+              return(
+                <div key={d} title={isHD?holidayName(date):undefined}
+                  onClick={isHD?(e)=>{e.stopPropagation();const r=e.currentTarget.getBoundingClientRect();setHolidayTip({x:r.left,y:r.bottom+4,name:holidayName(date)});}:undefined}
+                  style={{width:DAY_PX,flexShrink:0,textAlign:"center",borderRight:d===days-1?"none":"1px solid #e2e8f0",background:bg,paddingTop:3,paddingBottom:3,cursor:isHD?"pointer":"default"}}>
+                  <div style={{fontSize:9,fontWeight:isTD||isHD?800:500,color:fc,lineHeight:1.3}}>{d+1}</div>
+                  <div style={{fontSize:7,color:wc,lineHeight:1.2}}>{WEEKDAY[dow]}</div>
+                </div>
+              );
+            })}
+          </div>
+          {rows.map((row,ri)=>{
+            if(row.type==="bp"){
+              const{bp,bpColor,bpS,bpE}=row;
+              const mFirst=new Date(m.getFullYear(),m.getMonth(),1),mLast=new Date(m.getFullYear(),m.getMonth()+1,0);
+              const hasBar=bpS&&bpE&&bpS<=mLast&&bpE>=mFirst;
+              const clipS=hasBar?(bpS>mFirst?bpS:mFirst):null,clipE=hasBar?(bpE<mLast?bpE:mLast):null;
+              const barL=clipS?(clipS.getDate()-1)*DAY_PX:0;
+              const barW=(clipS&&clipE)?Math.max((diffDays(clipS,clipE)+1)*DAY_PX,DAY_PX):0;
+              return(
+                <div key={"bp-"+bp.id} style={{display:"flex",alignItems:"center",height:BP_H,background:bpColor+"0d",borderBottom:`1px solid ${bpColor}33`}}>
+                  <div style={{width:LABEL_W,flexShrink:0,paddingLeft:10,paddingRight:6,fontSize:10,fontWeight:700,color:bpColor,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                    {bp.collapsed?"▶ ":"▼ "}{bp.name}
+                  </div>
+                  <div style={{position:"relative",width:W,height:"100%",flexShrink:0}}>
+                    <DayCells total={days}/>
+                    {hasBar&&<div style={{position:"absolute",left:barL,top:6,width:barW,height:BP_H-14,borderRadius:3,background:bpColor,opacity:.28}}/>}
+                  </div>
+                </div>
+              );
+            }
+            const{t,bpColor}=row;
+            if(!t.startDate||!t.endDate)return null;
+            const st=calcStatus(t),barColor=st==="待執行"?"#94a3b8":bpColor;
+            const pct=getTimePct(t),isH=hovered===t.id;
+            const mFirst=new Date(m.getFullYear(),m.getMonth(),1),mLast=new Date(m.getFullYear(),m.getMonth()+1,0);
+            const tS=parseDate(t.startDate),tE=parseDate(t.endDate);
+            if(tS>mLast||tE<mFirst)return null;
+            const clipS=tS>mFirst?tS:mFirst,clipE=tE<mLast?tE:mLast;
+            const barL=(clipS.getDate()-1)*DAY_PX,barW=Math.max((diffDays(clipS,clipE)+1)*DAY_PX,DAY_PX);
+            return(
+              <div key={"t-"+t.id} style={{display:"flex",alignItems:"stretch",minHeight:32,borderBottom:"1px solid #f1f5f9",background:t.done?"#fafafa":"white",opacity:t.done?.7:1}}>
+                <div style={{width:LABEL_W,flexShrink:0,paddingLeft:20,paddingRight:6,paddingTop:4,paddingBottom:4,display:"flex",flexDirection:"column",justifyContent:"center",gap:2,minWidth:0}}>
+                  <div style={{fontSize:10,color:"#475569",fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.name}</div>
+                  <div style={{fontSize:8,color:"#94a3b8",whiteSpace:"nowrap"}}>{t.startDate.slice(5)} ~ {t.endDate.slice(5)} · {calcWorkDays(t.startDate,t.endDate)} 工作天</div>
+                </div>
+                <div style={{position:"relative",width:W,height:"100%",flexShrink:0}}>
+                  <DayCells total={days}/>
+                  <div style={{position:"absolute",left:barL,top:5,width:barW,height:22,borderRadius:11,background:barColor+"33",overflow:"visible"}}
+                    onMouseEnter={()=>setHovered(t.id)} onMouseLeave={()=>setHovered(null)}>
+                    {!t.done&&<div style={{position:"absolute",left:0,top:0,height:"100%",width:`${pct}%`,background:barColor,borderRadius:11}}/>}
+                    {t.done&&<div style={{position:"absolute",left:0,top:"50%",width:"100%",height:2,background:"#94a3b8"}}/>}
+                    {barW>44&&<span style={{position:"absolute",left:7,top:"50%",transform:"translateY(-50%)",color:t.done?"#94a3b8":"white",fontSize:9,fontWeight:700,pointerEvents:"none",textShadow:"0 1px 2px rgba(0,0,0,.4)",whiteSpace:"nowrap"}}>{t.done?"已完成":st}</span>}
+                  </div>
+                  {isH&&(
+                    <div style={{position:"absolute",left:Math.min(barL,W-240),top:-36,background:"#1e293b",color:"white",padding:"4px 8px",borderRadius:5,fontSize:10,whiteSpace:"nowrap",zIndex:10,pointerEvents:"none"}}>
+                      <strong>{t.name}</strong>
+                      <span style={{color:"#94a3b8"}}> · {t.startDate} → {t.endDate}</span><br/>
+                      <span style={{color:st==="執行中"?"#60a5fa":"#cbd5e1"}}>{st}</span>
+                      <span style={{color:"#64748b"}}> · 時程 {pct}%</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  });
   // ===== MOBILE =====
   if(isMobile){
     const drawerInfo=drawerTaskId?findInfo(drawerTaskId):null;
@@ -522,6 +627,22 @@ function App(){
           </div>
         </div>
         {SYNC_LABEL[syncStatus]&&<div style={{position:"sticky",top:54,zIndex:31,background:"#1e293b",color:"white",fontSize:11,textAlign:"center",padding:"4px"}}>{SYNC_LABEL[syncStatus]}</div>}
+        <div style={{display:"flex",position:"sticky",top:SYNC_LABEL[syncStatus]?86:54,zIndex:29,background:"#f0f4f8",borderBottom:"1px solid #e2e8f0"}}>
+          <button onClick={()=>setMobileTab("list")}
+            style={{flex:1,padding:"9px 0",border:"none",background:"none",fontSize:12,fontWeight:700,cursor:"pointer",color:mobileTab==="list"?"#1d4ed8":"#94a3b8",borderBottom:mobileTab==="list"?"2px solid #1d4ed8":"2px solid transparent"}}>
+            📋 專案清單
+          </button>
+          <button onClick={()=>setMobileTab("gantt")}
+            style={{flex:1,padding:"9px 0",border:"none",background:"none",fontSize:12,fontWeight:700,cursor:"pointer",color:mobileTab==="gantt"?"#1d4ed8":"#94a3b8",borderBottom:mobileTab==="gantt"?"2px solid #1d4ed8":"2px solid transparent"}}>
+            📊 甘特圖
+          </button>
+        </div>
+        {mobileTab==="gantt"&&(
+          <div style={{overflowX:"auto",overflowY:"hidden",padding:"10px 10px 24px",background:"white"}}>
+            {ganttMonthsEl}
+          </div>
+        )}
+        {mobileTab==="list"&&(
         <div style={{padding:"12px 12px 0"}}>
           {bigProjects.map((bp,bpIdx)=>{
             const bpColor=COLORS[bpIdx%COLORS.length];
@@ -640,6 +761,7 @@ function App(){
             );
           })}
         </div>
+        )}
         {drawerInfo&&(
           <div style={{position:"fixed",inset:0,background:"white",zIndex:100,display:"flex",flexDirection:"column"}} onClick={e=>e.stopPropagation()}>
             <DrawerPanel taskInfo={drawerInfo} drawerTab={drawerTab} setDrawerTab={setDrawerTab} setDrawerTaskId={setDrawerTaskId} setDetailField={setDetailField} setStepField={setStepField}/>
@@ -813,110 +935,7 @@ function App(){
             </div>
           </div>
           <div style={{flex:1,overflowY:"auto",overflowX:"auto",padding:"14px 16px 24px",background:"white"}}>
-            {months.map((m,mi)=>{
-              const days=mDays[mi];
-              const isCurM=todayDate.getFullYear()===m.getFullYear()&&todayDate.getMonth()===m.getMonth();
-              const todayD=isCurM?todayDate.getDate()-1:-1;
-              const W=days*DAY_PX;
-              const rows=[];
-              bigProjects.forEach((bp,bpIdx)=>{
-                const bpColor=COLORS[bpIdx%COLORS.length];
-                const valid=bp.tasks.filter(t=>t.startDate&&t.endDate);
-                const bpS=valid.length?new Date(Math.min(...valid.map(t=>parseDate(t.startDate)))):null;
-                const bpE=valid.length?new Date(Math.max(...valid.map(t=>parseDate(t.endDate)))):null;
-                rows.push({type:"bp",bp,bpColor,bpS,bpE});
-                if(!bp.collapsed)bp.tasks.forEach(t=>rows.push({type:"task",t,bpColor}));
-              });
-              const DayCells=({total})=>Array.from({length:total},(_,d)=>{
-                const cd=new Date(m.getFullYear(),m.getMonth(),d+1);
-                const dow=cd.getDay(),isWE=dow===0||dow===6,isTD=d===todayD,isHD=isHoliday(cd);
-                return <div key={d} style={{position:"absolute",left:d*DAY_PX,top:0,width:DAY_PX,height:"100%",background:isTD?"#fef9c3":isHD?"#f0fdf4":isWE?"#fdf2f8":"transparent",borderRight:d===total-1?"none":"1px solid #f8fafc"}}/>;
-              });
-              return(
-                <div key={mi} style={{marginBottom:28,minWidth:LABEL_W+W}}>
-                  <div style={{display:"flex",alignItems:"center",background:"#1e293b",color:"white",padding:"5px 12px",borderRadius:"6px 6px 0 0",fontSize:12,fontWeight:800,letterSpacing:".05em"}}>
-                    {m.getFullYear()} 年 {m.getMonth()+1} 月
-                    {isCurM&&<span style={{marginLeft:10,fontSize:9,background:"#ef4444",padding:"1px 7px",borderRadius:8,fontWeight:700}}>本月</span>}
-                  </div>
-                  <div style={{position:"relative",border:"1px solid #e2e8f0",borderTop:"none",borderRadius:"0 0 6px 6px",overflow:"hidden"}}>
-                    {isCurM&&<div style={{position:"absolute",left:LABEL_W+todayD*DAY_PX+DAY_PX/2-1,top:0,bottom:0,width:2,background:"#ef4444",zIndex:20,pointerEvents:"none"}}/>}
-                    <div style={{display:"flex",borderBottom:"2px solid #cbd5e1",background:"#f8fafc"}}>
-                      <div style={{width:LABEL_W,flexShrink:0,display:"flex",alignItems:"center",paddingLeft:10,fontSize:9,fontWeight:700,color:"#64748b"}}>大專案 / 工程</div>
-                      {Array.from({length:days},(_,d)=>{
-                        const date=new Date(m.getFullYear(),m.getMonth(),d+1);
-                        const dow=date.getDay(),isWE=dow===0||dow===6,isHD=isHoliday(date),isTD=d===todayD;
-                        const bg=isTD?"#fef08a":isHD?"#dcfce7":isWE?"#fce7f3":"transparent";
-                        const fc=isTD?"#b45309":isHD?"#16a34a":isWE?"#db2777":"#475569";
-                        const wc=isTD?"#d97706":isHD?"#22c55e":isWE?"#ec4899":"#94a3b8";
-                        return(
-                          <div key={d} title={isHD?holidayName(date):undefined}
-                            onClick={isHD?(e)=>{e.stopPropagation();const r=e.currentTarget.getBoundingClientRect();setHolidayTip({x:r.left,y:r.bottom+4,name:holidayName(date)});}:undefined}
-                            style={{width:DAY_PX,flexShrink:0,textAlign:"center",borderRight:d===days-1?"none":"1px solid #e2e8f0",background:bg,paddingTop:3,paddingBottom:3,cursor:isHD?"pointer":"default"}}>
-                            <div style={{fontSize:9,fontWeight:isTD||isHD?800:500,color:fc,lineHeight:1.3}}>{d+1}</div>
-                            <div style={{fontSize:7,color:wc,lineHeight:1.2}}>{WEEKDAY[dow]}</div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    {rows.map((row,ri)=>{
-                      if(row.type==="bp"){
-                        const{bp,bpColor,bpS,bpE}=row;
-                        const mFirst=new Date(m.getFullYear(),m.getMonth(),1),mLast=new Date(m.getFullYear(),m.getMonth()+1,0);
-                        const hasBar=bpS&&bpE&&bpS<=mLast&&bpE>=mFirst;
-                        const clipS=hasBar?(bpS>mFirst?bpS:mFirst):null,clipE=hasBar?(bpE<mLast?bpE:mLast):null;
-                        const barL=clipS?(clipS.getDate()-1)*DAY_PX:0;
-                        const barW=(clipS&&clipE)?Math.max((diffDays(clipS,clipE)+1)*DAY_PX,DAY_PX):0;
-                        return(
-                          <div key={"bp-"+bp.id} style={{display:"flex",alignItems:"center",height:BP_H,background:bpColor+"0d",borderBottom:`1px solid ${bpColor}33`}}>
-                            <div style={{width:LABEL_W,flexShrink:0,paddingLeft:10,paddingRight:6,fontSize:10,fontWeight:700,color:bpColor,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
-                              {bp.collapsed?"▶ ":"▼ "}{bp.name}
-                            </div>
-                            <div style={{position:"relative",width:W,height:"100%",flexShrink:0}}>
-                              <DayCells total={days}/>
-                              {hasBar&&<div style={{position:"absolute",left:barL,top:6,width:barW,height:BP_H-14,borderRadius:3,background:bpColor,opacity:.28}}/>}
-                            </div>
-                          </div>
-                        );
-                      }
-                      const{t,bpColor}=row;
-                      if(!t.startDate||!t.endDate)return null;
-                      const st=calcStatus(t),barColor=st==="待執行"?"#94a3b8":bpColor;
-                      const pct=getTimePct(t),isH=hovered===t.id;
-                      const mFirst=new Date(m.getFullYear(),m.getMonth(),1),mLast=new Date(m.getFullYear(),m.getMonth()+1,0);
-                      const tS=parseDate(t.startDate),tE=parseDate(t.endDate);
-                      if(tS>mLast||tE<mFirst)return null;
-                      const clipS=tS>mFirst?tS:mFirst,clipE=tE<mLast?tE:mLast;
-                      const barL=(clipS.getDate()-1)*DAY_PX,barW=Math.max((diffDays(clipS,clipE)+1)*DAY_PX,DAY_PX);
-                      return(
-                        <div key={"t-"+t.id} style={{display:"flex",alignItems:"stretch",minHeight:32,borderBottom:"1px solid #f1f5f9",background:t.done?"#fafafa":"white",opacity:t.done?.7:1}}>
-                          <div style={{width:LABEL_W,flexShrink:0,paddingLeft:20,paddingRight:6,paddingTop:4,paddingBottom:4,display:"flex",flexDirection:"column",justifyContent:"center",gap:2,minWidth:0}}>
-                            <div style={{fontSize:10,color:"#475569",fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.name}</div>
-                            <div style={{fontSize:8,color:"#94a3b8",whiteSpace:"nowrap"}}>{t.startDate.slice(5)} ~ {t.endDate.slice(5)} · {calcWorkDays(t.startDate,t.endDate)} 工作天</div>
-                          </div>
-                          <div style={{position:"relative",width:W,height:"100%",flexShrink:0}}>
-                            <DayCells total={days}/>
-                            <div style={{position:"absolute",left:barL,top:5,width:barW,height:22,borderRadius:11,background:barColor+"33",overflow:"visible"}}
-                              onMouseEnter={()=>setHovered(t.id)} onMouseLeave={()=>setHovered(null)}>
-                              {!t.done&&<div style={{position:"absolute",left:0,top:0,height:"100%",width:`${pct}%`,background:barColor,borderRadius:11}}/>}
-                              {t.done&&<div style={{position:"absolute",left:0,top:"50%",width:"100%",height:2,background:"#94a3b8"}}/>}
-                              {barW>44&&<span style={{position:"absolute",left:7,top:"50%",transform:"translateY(-50%)",color:t.done?"#94a3b8":"white",fontSize:9,fontWeight:700,pointerEvents:"none",textShadow:"0 1px 2px rgba(0,0,0,.4)",whiteSpace:"nowrap"}}>{t.done?"已完成":st}</span>}
-                            </div>
-                            {isH&&(
-                              <div style={{position:"absolute",left:Math.min(barL,W-240),top:-36,background:"#1e293b",color:"white",padding:"4px 8px",borderRadius:5,fontSize:10,whiteSpace:"nowrap",zIndex:10,pointerEvents:"none"}}>
-                                <strong>{t.name}</strong>
-                                <span style={{color:"#94a3b8"}}> · {t.startDate} → {t.endDate}</span><br/>
-                                <span style={{color:st==="執行中"?"#60a5fa":"#cbd5e1"}}>{st}</span>
-                                <span style={{color:"#64748b"}}> · 時程 {pct}%</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
+            {ganttMonthsEl}
           </div>
           {drawerTaskId&&(()=>{
             const info=findInfo(drawerTaskId);if(!info)return null;
