@@ -509,6 +509,130 @@ function App(){
       </div>
     </div>
   );
+  const [exporting,setExporting]=useState(false);
+  const exportPDF=()=>{
+    if(!months.length){alert("目前沒有任何工程資料可匯出。");return;}
+    setExporting(true);
+    const esc=s=>String(s??"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+    const TD=new Date();TD.setHours(0,0,0,0);
+    const todayK=dateKey(TD);
+    const dayHeaderCells=(y,mo,ndays)=>{
+      let out="";
+      for(let d=1;d<=ndays;d++){
+        const date=new Date(y,mo,d);
+        const dow=date.getDay(),isWE=dow===0||dow===6,isHD=isHoliday(date),isTD=dateKey(date)===todayK;
+        const bg=isTD?"#fef08a":isHD?"#dcfce7":isWE?"#fce7f3":"transparent";
+        const fc=isTD?"#b45309":isHD?"#16a34a":isWE?"#db2777":"#475569";
+        const wc=isTD?"#d97706":isHD?"#22c55e":isWE?"#ec4899":"#94a3b8";
+        const bold=(isTD||isHD)?800:500;
+        out+=`<div style="width:${DAY_PX}px;flex-shrink:0;text-align:center;background:${bg};border-right:1px solid #e2e8f0;padding:3px 0;">`+
+             `<div style="font-size:9px;font-weight:${bold};color:${fc};line-height:1.3;">${d}</div>`+
+             `<div style="font-size:7px;color:${wc};line-height:1.2;">${WEEKDAY[dow]}</div></div>`;
+      }
+      return out;
+    };
+    const bgCells=(y,mo,ndays)=>{
+      let out="";
+      for(let d=1;d<=ndays;d++){
+        const date=new Date(y,mo,d);
+        const dow=date.getDay(),isWE=dow===0||dow===6,isHD=isHoliday(date),isTD=dateKey(date)===todayK;
+        const bg=isTD?"#fef9c3":isHD?"#f0fdf4":isWE?"#fdf2f8":"transparent";
+        out+=`<div style="position:absolute;left:${(d-1)*DAY_PX}px;top:0;width:${DAY_PX}px;height:100%;background:${bg};border-right:1px solid #f8fafc;"></div>`;
+      }
+      return out;
+    };
+    const pages=[];
+    months.forEach((m,mi)=>{
+      const y=m.getFullYear(),mo=m.getMonth(),ndays=mDays[mi];
+      const mFirst=new Date(y,mo,1),mLast=new Date(y,mo+1,0);
+      const W=ndays*DAY_PX;
+      let ganttRows="",tableRows="";
+      bigProjects.forEach((bp,bpIdx)=>{
+        const bpColor=COLORS[bpIdx%COLORS.length];
+        const activeTasks=bp.tasks.filter(t=>{
+          if(!t.startDate||!t.endDate)return false;
+          const s=parseDate(t.startDate),e=parseDate(t.endDate);
+          return s<=mLast&&e>=mFirst;
+        });
+        if(!activeTasks.length)return;
+        const bpStarts=activeTasks.map(t=>parseDate(t.startDate)),bpEnds=activeTasks.map(t=>parseDate(t.endDate));
+        const bpMin=new Date(Math.min(...bpStarts)),bpMax=new Date(Math.max(...bpEnds));
+        const bandS=bpMin>mFirst?bpMin:mFirst,bandE=bpMax<mLast?bpMax:mLast;
+        const bandL=(bandS.getDate()-1)*DAY_PX,bandW=Math.max((diffDays(bandS,bandE)+1)*DAY_PX,DAY_PX);
+        ganttRows+=`<div style="display:flex;align-items:center;height:${BP_H}px;background:${bpColor}0d;border-bottom:1px solid ${bpColor}33;">`+
+          `<div style="width:${LABEL_W}px;flex-shrink:0;padding-left:10px;font-size:10px;font-weight:800;color:${bpColor};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">▼ ${esc(bp.name)}</div>`+
+          `<div style="position:relative;width:${W}px;height:100%;flex-shrink:0;">${bgCells(y,mo,ndays)}`+
+          `<div style="position:absolute;left:${bandL}px;top:6px;height:7px;width:${bandW}px;background:${bpColor};opacity:.28;border-radius:3px;"></div>`+
+          `</div></div>`;
+        tableRows+=`<tr class="bp-row"><td colspan="4">${esc(bp.name)} — 總預算 ${bp.totalBudget?esc(fmtN(parseN(bp.totalBudget))):"—"} 元</td></tr>`;
+        activeTasks.forEach(t=>{
+          const st=calcStatus(t),barColor=st==="待執行"?"#94a3b8":bpColor;
+          const tS=parseDate(t.startDate),tE=parseDate(t.endDate);
+          const clipS=tS>mFirst?tS:mFirst,clipE=tE<mLast?tE:mLast;
+          const barL=(clipS.getDate()-1)*DAY_PX,barW=Math.max((diffDays(clipS,clipE)+1)*DAY_PX,DAY_PX);
+          const labelColor=st==="待執行"?"#334155":"white";
+          ganttRows+=`<div style="display:flex;align-items:center;height:28px;border-bottom:1px solid #f1f5f9;">`+
+            `<div style="width:${LABEL_W}px;flex-shrink:0;padding-left:20px;font-size:9px;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(t.name)}</div>`+
+            `<div style="position:relative;width:${W}px;height:100%;flex-shrink:0;">${bgCells(y,mo,ndays)}`+
+            `<div style="position:absolute;left:${barL}px;top:5px;width:${barW}px;height:18px;border-radius:9px;background:${barColor};display:flex;align-items:center;padding-left:6px;font-size:9px;font-weight:700;color:${labelColor};white-space:nowrap;overflow:hidden;">${t.done?"已完成":st}</div>`+
+            `</div></div>`;
+          const cls=t.done?"st-done":st==="執行中"?"st-ing":"st-wait";
+          tableRows+=`<tr><td style="padding-left:16px;">${esc(t.name)}</td><td>${t.startDate} ~ ${t.endDate}</td><td>${calcWorkDays(t.startDate,t.endDate)}</td><td><span class="status-pill ${cls}">${t.done?"已完成":st}</span></td></tr>`;
+        });
+      });
+      if(!tableRows)return;
+      const isCurM=(y===TD.getFullYear()&&mo===TD.getMonth());
+      const curTag=isCurM?`<span style="margin-left:8px;font-size:10px;background:#ef4444;padding:1px 7px;border-radius:8px;font-weight:700;color:white;">本月</span>`:"";
+      pages.push(`<div class="pdf-page">`+
+        `<div class="pdf-title-bar"><div class="pdf-title">🏗️ 工程管理系統 — 專案總覽報表</div><div class="pdf-page-tag">第 ${pages.length+1} 頁・${y}年${mo+1}月</div></div>`+
+        `<div class="pdf-gantt-month-label">${y} 年 ${mo+1} 月${curTag}</div>`+
+        `<div class="pdf-gantt-grid">`+
+          `<div style="display:flex;border-bottom:2px solid #cbd5e1;background:#f8fafc;">`+
+            `<div style="width:${LABEL_W}px;flex-shrink:0;display:flex;align-items:center;padding-left:10px;font-size:10px;font-weight:700;color:#64748b;">大專案/工程</div>`+
+            dayHeaderCells(y,mo,ndays)+
+          `</div>`+
+          ganttRows+
+        `</div>`+
+        `<div class="pdf-table-title">${mo+1}月 工程清單</div>`+
+        `<table class="pdf-main"><tr><th>大專案 / 工程</th><th>日期</th><th>工作天</th><th>狀態</th></tr>${tableRows}</table>`+
+      `</div>`);
+    });
+    if(!pages.length){alert("目前沒有任何工程資料可匯出。");setExporting(false);return;}
+    const PDF_CSS=`
+      .pdf-root *{box-sizing:border-box;}
+      .pdf-root{font-family:"PingFang TC","Microsoft JhengHei",system-ui,sans-serif;color:#1e293b;font-size:12px;}
+      .pdf-page{width:1040px;padding:24px;}
+      .pdf-title-bar{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;}
+      .pdf-title{font-size:19px;font-weight:800;color:#1d4ed8;}
+      .pdf-page-tag{font-size:11px;color:#94a3b8;font-weight:700;}
+      .pdf-gantt-month-label{background:#1e293b;color:white;font-size:13px;font-weight:800;padding:6px 14px;border-radius:5px 5px 0 0;display:flex;align-items:center;}
+      .pdf-gantt-grid{border:1px solid #e2e8f0;border-top:none;border-radius:0 0 5px 5px;margin-bottom:14px;}
+      .pdf-table-title{font-size:13px;font-weight:800;color:#1e293b;margin-bottom:6px;}
+      table.pdf-main{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:16px;}
+      table.pdf-main th{background:#f1f5f9;color:#475569;text-align:left;padding:6px 10px;font-weight:700;border:1px solid #e2e8f0;white-space:nowrap;}
+      table.pdf-main td{padding:6px 10px;border:1px solid #f1f5f9;vertical-align:top;}
+      table.pdf-main tr.bp-row td{background:#eff6ff;font-weight:800;color:#1d4ed8;}
+      .status-pill{display:inline-block;padding:2px 10px;border-radius:10px;font-size:10px;font-weight:700;white-space:nowrap;}
+      .st-done{background:#f0fdf4;color:#16a34a;border:1px solid #86efac;}
+      .st-ing{background:#eff6ff;color:#2563eb;border:1px solid #93c5fd;}
+      .st-wait{background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;}
+    `;
+    const container=document.createElement("div");
+    container.style.position="fixed";container.style.left="-9999px";container.style.top="0";
+    container.innerHTML=`<style>${PDF_CSS}</style><div class="pdf-root">${pages.join("")}</div>`;
+    document.body.appendChild(container);
+    const fname=`工程管理報表_${dateKey(new Date())}.pdf`;
+    html2pdf().set({
+      margin:[8,8,8,8],
+      filename:fname,
+      image:{type:"jpeg",quality:0.98},
+      html2canvas:{scale:2,useCORS:true},
+      jsPDF:{unit:"mm",format:"a4",orientation:"landscape"},
+      pagebreak:{mode:["css","legacy"],after:".pdf-page"}
+    }).from(container.querySelector(".pdf-root")).save().then(()=>{
+      document.body.removeChild(container);setExporting(false);
+    }).catch(()=>{document.body.removeChild(container);setExporting(false);});
+  };
   const ganttMonthsEl=months.map((m,mi)=>{
     const days=mDays[mi];
     const isCurM=todayDate.getFullYear()===m.getFullYear()&&todayDate.getMonth()===m.getMonth();
@@ -621,6 +745,10 @@ function App(){
             <button onClick={()=>{setCloudUrlInput(cloudUrl);setShowCloudSettings(true);}} title="雲端同步設定"
               style={{background:"rgba(255,255,255,.2)",border:"1px solid rgba(255,255,255,.4)",color:"white",borderRadius:6,padding:"6px 9px",fontSize:11,fontWeight:700,cursor:"pointer"}}>
               ☁️
+            </button>
+            <button onClick={exportPDF} disabled={exporting} title="匯出PDF"
+              style={{background:"rgba(255,255,255,.2)",border:"1px solid rgba(255,255,255,.4)",color:"white",borderRadius:6,padding:"6px 9px",fontSize:11,fontWeight:700,cursor:exporting?"default":"pointer",opacity:exporting?.6:1}}>
+              {exporting?"匯出中...":"📄 PDF"}
             </button>
             <button onClick={addBigProject}
               style={{background:"rgba(255,255,255,.2)",border:"1px solid rgba(255,255,255,.4)",color:"white",borderRadius:6,padding:"6px 12px",fontSize:11,fontWeight:700,cursor:"pointer"}}>
@@ -929,11 +1057,15 @@ function App(){
               <div style={{fontWeight:"bold",fontSize:13}}>📊 甘特圖 — 大專案群組視圖</div>
               <div style={{color:"#475569",fontSize:9,marginTop:1}}>紅線=今日 · 彩色標題=大專案 · Hover 查看詳情</div>
             </div>
-            <div style={{marginLeft:"auto",display:"flex",gap:8,alignItems:"center"}}>
+            <div style={{marginLeft:"auto",display:"flex",gap:10,alignItems:"center"}}>
               <span style={{fontSize:9,color:"#6b7280"}}>週末</span>
               <span style={{display:"inline-block",width:12,height:12,background:"#fce7f3",border:"1px solid #f9a8d4",borderRadius:2}}/>
               <span style={{fontSize:9,color:"#6b7280",marginLeft:4}}>國定假日</span>
               <span style={{display:"inline-block",width:12,height:12,background:"#dcfce7",border:"1px solid #86efac",borderRadius:2}}/>
+              <button onClick={exportPDF} disabled={exporting}
+                style={{marginLeft:8,background:exporting?"#475569":"#2563eb",border:"none",color:"white",borderRadius:5,padding:"5px 12px",fontSize:11,fontWeight:700,cursor:exporting?"default":"pointer"}}>
+                {exporting?"匯出中...":"📄 匯出PDF"}
+              </button>
             </div>
           </div>
           <div style={{flex:1,overflowY:"auto",overflowX:"auto",padding:"14px 16px 24px",background:"white"}}>
