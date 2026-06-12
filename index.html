@@ -7,6 +7,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body, #root { height: 100%; }
@@ -70,7 +71,7 @@ const mkSteps=()=>({
   contactDeposit:{invoiceReceived:false,confirmedDate:"",remittanceDate:"",amount:"",percent:""},
   contactFinal:{invoiceReceived:false,confirmedDate:"",remittanceDate:""},
   contract:{signed:false,internalSeal:false,vendorSeal:false,archived:false},
-  plan:{submitted:false,workOrderApplied:false,workOrderStart:"",workOrderEnd:""},
+  plan:{item1:"",item2:"",item3:""},
 });
 const today0=()=>new Date().toISOString().slice(0,10);
 const after30=()=>new Date(Date.now()+30*86400000).toISOString().slice(0,10);
@@ -159,6 +160,14 @@ function DetailPanel({t,color,setStepField}){
       {val&&<span style={{fontSize:9,color}}>✓</span>}
     </div>
   );
+  const NumItem=({n,path,val})=>(
+    <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}} onClick={e=>e.stopPropagation()}>
+      <span style={{fontSize:10,color:"#94a3b8",flexShrink:0}}>{n}.</span>
+      <input type="text" placeholder="填寫內容" value={val||""} onChange={e=>setStepField(t.id,path,e.target.value)}
+        style={{border:"1px solid #cbd5e1",borderRadius:3,padding:"3px 6px",fontSize:9,outline:"none",fontFamily:"inherit",width:"100%"}}
+        onFocus={e=>e.target.style.borderColor=color} onBlur={e=>e.target.style.borderColor="#cbd5e1"}/>
+    </div>
+  );
   const DepositRow=()=>{
     const evalExpr=str=>{const s=String(str).slice(1).replace(/[^0-9+\-*/().]/g,"");try{const r=Function('"use strict";return('+s+")")();return isFinite(r)?Math.round(r):null;}catch{return null;}};
     const extractBase=str=>{const m=String(str).slice(1).match(/^(\d+)/);return m?Number(m[1]):null;};
@@ -206,7 +215,7 @@ function DetailPanel({t,color,setStepField}){
   return(
     <>
       <div style={grp}>
-        <div style={grpLabel}>📄 簽呃</div>
+        <div style={grpLabel}>📄 簽呈</div>
         <div style={{paddingLeft:6,display:"flex",gap:14}}>
           <Chk label="已送出" path="stamp.sent" val={t.steps.stamp.sent}/>
           <Chk label="已查照" path="stamp.confirmed" val={t.steps.stamp.confirmed}/>
@@ -242,12 +251,11 @@ function DetailPanel({t,color,setStepField}){
         </div>
       </div>
       <div style={grp}>
-        <div style={grpLabel}>📐 施工計畫</div>
+        <div style={grpLabel}>📐 其他</div>
         <div style={{paddingLeft:6,display:"flex",flexDirection:"column",gap:5}}>
-          <Chk label="計畫書已提交" path="plan.submitted" val={t.steps.plan.submitted}/>
-          <Chk label="開工通報已申請" path="plan.workOrderApplied" val={t.steps.plan.workOrderApplied}/>
-          <DateRow label="開工" path="plan.workOrderStart" val={t.steps.plan.workOrderStart}/>
-          <DateRow label="完工" path="plan.workOrderEnd" val={t.steps.plan.workOrderEnd}/>
+          <NumItem n={1} path="plan.item1" val={t.steps.plan.item1}/>
+          <NumItem n={2} path="plan.item2" val={t.steps.plan.item2}/>
+          <NumItem n={3} path="plan.item3" val={t.steps.plan.item3}/>
         </div>
       </div>
     </>
@@ -548,12 +556,7 @@ function App(){
           </div>
           {rows.map((row,ri)=>{
             if(row.type==="bp"){
-              const{bp,bpColor,bpS,bpE}=row;
-              const mFirst=new Date(m.getFullYear(),m.getMonth(),1),mLast=new Date(m.getFullYear(),m.getMonth()+1,0);
-              const hasBar=bpS&&bpE&&bpS<=mLast&&bpE>=mFirst;
-              const clipS=hasBar?(bpS>mFirst?bpS:mFirst):null,clipE=hasBar?(bpE<mLast?bpE:mLast):null;
-              const barL=clipS?(clipS.getDate()-1)*DAY_PX:0;
-              const barW=(clipS&&clipE)?Math.max((diffDays(clipS,clipE)+1)*DAY_PX,DAY_PX):0;
+              const{bp,bpColor}=row;
               return(
                 <div key={"bp-"+bp.id} style={{display:"flex",alignItems:"center",height:BP_H,background:bpColor+"0d",borderBottom:`1px solid ${bpColor}33`}}>
                   <div style={{width:LABEL_W,flexShrink:0,paddingLeft:10,paddingRight:6,fontSize:10,fontWeight:700,color:bpColor,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
@@ -561,7 +564,6 @@ function App(){
                   </div>
                   <div style={{position:"relative",width:W,height:"100%",flexShrink:0}}>
                     <DayCells total={days}/>
-                    {hasBar&&<div style={{position:"absolute",left:barL,top:6,width:barW,height:BP_H-14,borderRadius:3,background:bpColor,opacity:.28}}/>}
                   </div>
                 </div>
               );
@@ -649,7 +651,7 @@ function App(){
             const total=bp.tasks.length,done=bp.tasks.filter(t=>t.done).length;
             const active=bp.tasks.filter(t=>calcStatus(t)==="執行中").length;
             const pct=total?Math.round(done/total*100):0,isExp=expandedBpId===bp.id;
-            const totalBN=parseN(bp.totalBudget),usedBN=bp.tasks.reduce((s,t)=>s+parseN(t.taskBudget),0);
+            const totalBN=parseN(bp.totalBudget),usedBN=bp.tasks.reduce((s,t)=>s+parseN(t.detail?.actualCost),0);
             const over=totalBN>0&&usedBN>totalBN,pctUsed=totalBN>0?Math.min(Math.round(usedBN/totalBN*100),999):0;
             const remBN=totalBN-usedBN;
             return(
@@ -701,7 +703,7 @@ function App(){
                   <div>
                     {bp.tasks.map(t=>{
                       const st=calcStatus(t),ss=S_STYLE[st];
-                      const taskBN=parseN(t.taskBudget),overTask=totalBN>0&&usedBN>totalBN&&taskBN>0;
+                      const taskBN=parseN(t.detail?.actualCost),overTask=totalBN>0&&usedBN>totalBN&&taskBN>0;
                       const pctTask=totalBN>0&&taskBN>0?((taskBN/totalBN)*100).toFixed(1):null;
                       return(
                         <div key={t.id} style={{borderBottom:"1px solid #f1f5f9",background:t.done?"#fafafa":"white"}}>
@@ -738,9 +740,9 @@ function App(){
                               onMouseEnter={e=>e.currentTarget.style.color="#ef4444"} onMouseLeave={e=>e.currentTarget.style.color="#fca5a5"}>🗑️</button>
                           </div>
                           <div style={{padding:"2px 14px 8px 37px",display:"flex",alignItems:"center",gap:6}}>
-                            <span style={{fontSize:10,color:"#94a3b8",flexShrink:0}}>工程預算</span>
-                            <input type="text" inputMode="numeric" value={t.taskBudget} placeholder="—"
-                              onChange={e=>setTaskBudget(t.id,e.target.value)} onClick={e=>e.stopPropagation()}
+                            <span style={{fontSize:10,color:"#94a3b8",flexShrink:0}}>費用</span>
+                            <input type="text" inputMode="numeric" value={t.detail?.actualCost||""} placeholder="—"
+                              onChange={e=>{const n=String(e.target.value).replace(/[^0-9]/g,"");setDetailField(t.id,"actualCost",n?Number(n).toLocaleString("zh-TW"):"");}} onClick={e=>e.stopPropagation()}
                               style={{border:"none",borderBottom:`1px solid ${overTask?"#fca5a5":"#e2e8f0"}`,background:"transparent",fontSize:10,outline:"none",textAlign:"right",fontFamily:"inherit",width:90,color:overTask?"#ef4444":"#334155"}}/>
                             <span style={{fontSize:10,color:"#94a3b8",flexShrink:0}}>元（含稅）</span>
                             {pctTask&&<span style={{fontSize:10,fontWeight:700,color:overTask?"#ef4444":bpColor,flexShrink:0}}>{pctTask}%</span>}
@@ -806,7 +808,7 @@ function App(){
               const bpColor=COLORS[bpIdx%COLORS.length];
               const done=bp.tasks.filter(t=>t.done).length;
               const active=bp.tasks.filter(t=>calcStatus(t)==="執行中").length;
-              const totalBN=parseN(bp.totalBudget),usedBN=bp.tasks.reduce((s,t)=>s+parseN(t.taskBudget),0);
+              const totalBN=parseN(bp.totalBudget),usedBN=bp.tasks.reduce((s,t)=>s+parseN(t.detail?.actualCost),0);
               const over=totalBN>0&&usedBN>totalBN,pctUsed=totalBN>0?Math.min(Math.round(usedBN/totalBN*100),999):0;
               const remBN=totalBN-usedBN;
               return(
@@ -859,7 +861,7 @@ function App(){
                   )}
                   {!bp.collapsed&&bp.tasks.map(t=>{
                     const st=calcStatus(t),ss=S_STYLE[st];
-                    const taskBN=parseN(t.taskBudget),overTask=totalBN>0&&usedBN>totalBN&&taskBN>0;
+                    const taskBN=parseN(t.detail?.actualCost),overTask=totalBN>0&&usedBN>totalBN&&taskBN>0;
                     const pctTask=totalBN>0&&taskBN>0?((taskBN/totalBN)*100).toFixed(1):null;
                     return(
                       <div key={t.id} className="t-row" style={{borderBottom:"1px solid #f1f5f9",background:"white",opacity:t.done?.65:1}}>
@@ -888,9 +890,9 @@ function App(){
                             onMouseEnter={e=>e.currentTarget.style.color="#ef4444"} onMouseLeave={e=>e.currentTarget.style.color="#fca5a5"}>🗑️</button>
                         </div>
                         <div style={{display:"flex",alignItems:"center",gap:4,padding:"1px 5px 5px 28px"}}>
-                          <span style={{fontSize:9,color:"#94a3b8",flexShrink:0}}>工程預算</span>
-                          <input type="text" inputMode="numeric" value={t.taskBudget} placeholder="—"
-                            onChange={e=>setTaskBudget(t.id,e.target.value)} onClick={e=>e.stopPropagation()}
+                          <span style={{fontSize:9,color:"#94a3b8",flexShrink:0}}>費用</span>
+                          <input type="text" inputMode="numeric" value={t.detail?.actualCost||""} placeholder="—"
+                            onChange={e=>{const n=String(e.target.value).replace(/[^0-9]/g,"");setDetailField(t.id,"actualCost",n?Number(n).toLocaleString("zh-TW"):"");}} onClick={e=>e.stopPropagation()}
                             style={{border:"none",borderBottom:`1px solid ${overTask?"#fca5a5":"#e2e8f0"}`,background:"transparent",fontSize:9,outline:"none",textAlign:"right",fontFamily:"inherit",width:80,color:overTask?"#ef4444":"#334155"}}/>
                           <span style={{fontSize:9,color:"#94a3b8",flexShrink:0}}>元（含稅）</span>
                           {pctTask&&<span style={{fontSize:9,fontWeight:700,color:overTask?"#ef4444":bpColor,marginLeft:2,flexShrink:0}}>{pctTask}%</span>}
