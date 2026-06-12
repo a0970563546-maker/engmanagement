@@ -99,7 +99,7 @@ function ProjectDetailForm({t,setDetailField,color}){
     {key:"vendor",label:"配合廠商",type:"text",icon:"🏢"},
     {key:"content",label:"工程內容",type:"ta",icon:"📝"},
     {key:"tracking",label:"待追蹤事項",type:"ta",icon:"🔍"},
-    {key:"payment",label:"匙款資訊",type:"pay",icon:"🏦"},
+    {key:"payment",label:"匯款資訊",type:"pay",icon:"🏦"},
   ];
   const inp={border:"1px solid #e2e8f0",borderRadius:4,padding:"6px 10px",fontSize:11,outline:"none",fontFamily:"inherit",width:"100%"};
   const fo=(e,c)=>{e.target.style.borderColor=c;e.target.style.boxShadow=`0 0 0 2px ${c}22`;};
@@ -120,7 +120,7 @@ function ProjectDetailForm({t,setDetailField,color}){
             onChange={e=>{e.stopPropagation();setDetailField(t.id,key,e.target.value);}}
             style={inp} onFocus={e=>fo(e,color)} onBlur={bl}/>}
           {type==="pay"&&<div>
-            <textarea rows={2} value={det[key]??""} placeholder="備註匙款帳號、日期等…" onClick={e=>e.stopPropagation()}
+            <textarea rows={2} value={det[key]??""} placeholder="備註匯款帳號、日期等…" onClick={e=>e.stopPropagation()}
               onChange={e=>{e.stopPropagation();setDetailField(t.id,key,e.target.value);}}
               style={{...inp,resize:"vertical",minHeight:50,marginBottom:8}} onFocus={e=>fo(e,color)} onBlur={bl}/>
             <label style={{display:"inline-flex",alignItems:"center",gap:5,cursor:"pointer",background:color+"15",border:`1px dashed ${color}55`,borderRadius:4,padding:"5px 12px",fontSize:10,color,fontWeight:600}} onClick={e=>e.stopPropagation()}>
@@ -229,7 +229,7 @@ function DetailPanel({t,color,setStepField}){
             <DepositRow/>
             <div style={{marginBottom:4}}><Chk label="已收到發票" path="contactDeposit.invoiceReceived" val={t.steps.contactDeposit.invoiceReceived}/></div>
             <DateRow label="查照完成" path="contactDeposit.confirmedDate" val={t.steps.contactDeposit.confirmedDate}/>
-            <DateRow label="匙款" path="contactDeposit.remittanceDate" val={t.steps.contactDeposit.remittanceDate}/>
+            <DateRow label="匯款" path="contactDeposit.remittanceDate" val={t.steps.contactDeposit.remittanceDate}/>
           </div>
         </div>
         <div style={{paddingLeft:6}}>
@@ -237,7 +237,7 @@ function DetailPanel({t,color,setStepField}){
           <div style={{paddingLeft:6}}>
             <div style={{marginBottom:4}}><Chk label="已收到發票" path="contactFinal.invoiceReceived" val={t.steps.contactFinal.invoiceReceived}/></div>
             <DateRow label="查照完成" path="contactFinal.confirmedDate" val={t.steps.contactFinal.confirmedDate}/>
-            <DateRow label="匙款" path="contactFinal.remittanceDate" val={t.steps.contactFinal.remittanceDate}/>
+            <DateRow label="匯款" path="contactFinal.remittanceDate" val={t.steps.contactFinal.remittanceDate}/>
           </div>
         </div>
       </div>
