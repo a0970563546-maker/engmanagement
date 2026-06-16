@@ -217,8 +217,8 @@ function DetailPanel({t,color,setStepField}){
         </div>
         <div style={{display:"flex",alignItems:"center",gap:3,width:72}}>
           <input type="text" inputMode="numeric" placeholder="%" value={t.steps.contactDeposit.percent??""} onClick={e=>e.stopPropagation()}
-setStepField(t.id,"contactDeposit.amount",n);          <span style={{fontSize:10,color:"#64748b",flexShrink:0}}>%</span>
-setStepField(t.id,"contactDeposit.amount",n);      </div>
+onChange={onPctChange} style={{...iS,width:"100%"}} onFocus={e=>e.target.style.borderColor=color} onBlur={e=>e.target.style.borderColor="#cbd5e1"}/><span style={{fontSize:10,color:"#64748b",flexShrink:0}}>%</span>
+</div></div>
     );
   };
   return(
