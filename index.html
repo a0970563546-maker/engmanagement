@@ -1032,9 +1032,11 @@ function doPost(e){
     });
     return(
       <div key={mi} style={{marginBottom:28,minWidth:LABEL_W+W}}>
-        <div style={{display:"flex",alignItems:"center",background:"#1e293b",color:"white",padding:"5px 12px",borderRadius:"6px 6px 0 0",fontSize:13,fontWeight:800,letterSpacing:".05em"}}>
-          {m.getFullYear()} 年 {m.getMonth()+1} 月
-          {isCurM&&<span style={{marginLeft:10,fontSize:10,background:"#ef4444",padding:"1px 7px",borderRadius:8,fontWeight:700}}>本月</span>}
+        <div style={{background:"#1e293b",color:"white",borderRadius:"6px 6px 0 0",display:"flex",alignItems:"center"}}>
+          <div style={{position:"sticky",left:0,zIndex:22,background:"#1e293b",padding:"5px 12px",fontSize:13,fontWeight:800,letterSpacing:".05em",display:"flex",alignItems:"center",whiteSpace:"nowrap",flexShrink:0}}>
+            {m.getFullYear()} 年 {m.getMonth()+1} 月
+            {isCurM&&<span style={{marginLeft:10,fontSize:10,background:"#ef4444",padding:"1px 7px",borderRadius:8,fontWeight:700}}>本月</span>}
+          </div>
         </div>
         <div style={{position:"relative",border:"1px solid #e2e8f0",borderTop:"none",borderRadius:"0 0 6px 6px",overflow:"clip"}}>
           {isCurM&&<div style={{position:"absolute",left:LABEL_W+todayD*DAY_PX+DAY_PX/2-1,top:0,bottom:0,width:2,background:"#ef4444",zIndex:20,pointerEvents:"none"}}/>}
