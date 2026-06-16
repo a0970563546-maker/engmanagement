@@ -420,6 +420,7 @@ function App(){
   const[editDateId,setEditDateId]=useState(null);
   const[mobileTab,setMobileTab]=useState("list");
   const[ganttView,setGanttView]=useState("all"); // "daily" | "project" | "all"
+  const[mobileListView,setMobileListView]=useState("all"); // "daily" | "project" | "all"
   const[leftPanelView,setLeftPanelView]=useState("all"); // "daily" | "project" | "all"
   const[showAddTypeModal,setShowAddTypeModal]=useState(false);
   const[showExportTypeModal,setShowExportTypeModal]=useState(false);
@@ -517,15 +518,15 @@ function App(){
     if(now<=s)return 0;if(now>=e)return 100;
     return Math.round(diffDays(s,now)/diffDays(s,e)*100);
   };
-  // 專案清單：只顯示與「本月」有重疊的工程
-  const curMFirst=new Date(todayDate.getFullYear(),todayDate.getMonth(),1);
-  const curMLast=new Date(todayDate.getFullYear(),todayDate.getMonth()+1,0);
-  const taskInCurMonth=t=>{
-    if(!t.startDate||!t.endDate)return false;
-    const s=parseDate(t.startDate),e=parseDate(t.endDate);
-    return s<=curMLast&&e>=curMFirst;
-  };
-  const listProjects=bigProjects.map((bp,idx)=>({bp,idx,visTasks:bp.tasks.filter(taskInCurMonth)})).filter(x=>x.visTasks.length>0);
+  // 手機專案清單：依 mobileListView 篩選，顯示所有任務
+  const listProjects=bigProjects
+    .map((bp,idx)=>({bp,idx,visTasks:bp.tasks}))
+    .filter(({bp})=>{
+      if(mobileListView==="project")return !bp.isDaily;
+      if(mobileListView==="daily")return bp.isDaily;
+      return true;
+    })
+    .filter(x=>x.visTasks.length>0);
   const newTaskWorkDays=newTaskModal&&newTaskModal.startDate&&newTaskModal.endDate&&parseDate(newTaskModal.endDate)>=parseDate(newTaskModal.startDate)
     ?calcWorkDays(newTaskModal.startDate,newTaskModal.endDate):null;
   const dateInvalid=newTaskModal&&newTaskModal.startDate&&newTaskModal.endDate&&parseDate(newTaskModal.endDate)<parseDate(newTaskModal.startDate);
@@ -1169,7 +1170,162 @@ function doPost(e){
           </>
         )}
         {mobileTab==="list"&&(
-        <div style={{padding:"12px 12px 0"}}>
+        <div>
+          {/* 列表檢視切換 */}
+          <div style={{display:"flex",gap:6,padding:"10px 12px 0",background:"#f8fafc"}}>
+            {[["all","全部","🔗"],["project","專案","🏗️"],["daily","Daily","📅"]].map(([v,l,icon])=>(
+              <button key={v} onClick={()=>setMobileListView(v)}
+                style={{flex:1,padding:"6px 4px",borderRadius:8,border:"none",cursor:"pointer",fontSize:12,fontWeight:700,
+                  background:mobileListView===v?"#1e293b":"#e2e8f0",
+                  color:mobileListView===v?"white":"#64748b",transition:"all .15s"}}>
+                {icon} {l}
+              </button>
+            ))}
+          </div>
+          {/* 全部模式加區隔標籤 */}
+          {mobileListView==="all"&&(()=>{
+            const projectBps=bigProjects.filter(bp=>!bp.isDaily&&bp.tasks.length>0);
+            const dailyBps=bigProjects.filter(bp=>bp.isDaily&&bp.tasks.length>0);
+            const hasBoth=projectBps.length>0&&dailyBps.length>0;
+            const renderCard=({bp,idx:bpIdx,visTasks})=>{
+              const bpColor=COLORS[bpIdx%COLORS.length];
+              const total=bp.tasks.length,done=bp.tasks.filter(t=>t.done).length;
+              const active=bp.tasks.filter(t=>calcStatus(t)==="執行中").length;
+              const pct=total?Math.round(done/total*100):0,isExp=expandedBpId===bp.id;
+              const totalBN=parseN(bp.totalBudget),usedBN=bp.tasks.reduce((s,t)=>s+parseN(t.detail?.actualCost),0);
+              const over=totalBN>0&&usedBN>totalBN,pctUsed=totalBN>0?Math.min(Math.round(usedBN/totalBN*100),999):0;
+              const remBN=totalBN-usedBN;
+              return(
+                <div key={bp.id} style={{background:"white",borderRadius:10,marginBottom:12,border:`1px solid ${bpColor}33`,overflow:"hidden",boxShadow:"0 1px 6px rgba(0,0,0,.07)"}}>
+                  <div style={{background:bpColor+"10",borderBottom:`1px solid ${bpColor}22`,padding:"12px 14px"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
+                      <span style={{color:bpColor,fontSize:19,fontWeight:900,lineHeight:1,flexShrink:0}}>▌</span>
+                      {editBpId===bp.id
+                        ?<input autoFocus value={editBpName} onChange={e=>setEditBpName(e.target.value)}
+                            onBlur={commitBpEdit} onKeyDown={e=>{if(e.key==="Enter"||e.key==="Escape")e.currentTarget.blur();e.stopPropagation();}}
+                            onClick={e=>e.stopPropagation()}
+                            style={{flex:1,fontSize:15,fontWeight:700,border:"none",borderBottom:`2px solid ${bpColor}`,outline:"none",background:"transparent",fontFamily:"inherit"}}/>
+                        :<span onDoubleClick={()=>{setEditBpId(bp.id);setEditBpName(bp.name);}} style={{flex:1,fontSize:15,fontWeight:700,color:"#1e293b"}}>{bp.name}</span>
+                      }
+                      <button onClick={()=>setExpandedBpId(id=>id===bp.id?null:bp.id)}
+                        style={{background:"none",border:"none",cursor:"pointer",fontSize:15,color:bpColor,padding:"0 2px",flexShrink:0}}>{isExp?"▲":"▼"}</button>
+                      <button onClick={()=>delBigProject(bp.id)}
+                        style={{background:"none",border:"none",cursor:"pointer",fontSize:15,color:"#fca5a5",padding:"0 2px",flexShrink:0}}
+                        onMouseEnter={e=>e.currentTarget.style.color="#ef4444"} onMouseLeave={e=>e.currentTarget.style.color="#fca5a5"}>🗑️</button>
+                    </div>
+                    <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:totalBN>0?4:8}}>
+                      <span style={{fontSize:11,color:"#64748b",flexShrink:0}}>總預算</span>
+                      <input type="text" inputMode="numeric" value={bp.totalBudget} placeholder="—"
+                        onChange={e=>setBpBudget(bp.id,e.target.value)} onClick={e=>e.stopPropagation()}
+                        style={{border:"1px solid #e2e8f0",borderRadius:4,padding:"2px 6px",fontSize:11,outline:"none",textAlign:"right",fontFamily:"inherit",width:110}}/>
+                      <span style={{fontSize:11,color:"#64748b"}}>元（含稅）</span>
+                      {active>0&&<span style={{marginLeft:"auto",fontSize:11,color:"#2563eb",fontWeight:700,background:"#eff6ff",padding:"2px 7px",borderRadius:8,whiteSpace:"nowrap"}}>{active} 執行中</span>}
+                    </div>
+                    {totalBN>0&&(
+                      <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
+                        <div style={{flex:1,height:5,background:"#e2e8f0",borderRadius:3,overflow:"hidden"}}>
+                          <div style={{width:`${Math.min(pctUsed,100)}%`,height:"100%",background:over?"#ef4444":bpColor,borderRadius:3}}/>
+                        </div>
+                        <span style={{fontSize:11,fontWeight:700,color:over?"#ef4444":bpColor,flexShrink:0}}>{pctUsed}%</span>
+                        <span style={{fontSize:11,color:over?"#ef4444":"#94a3b8",flexShrink:0,whiteSpace:"nowrap"}}>
+                          {over?`⚠ 超出 ${fmtN(Math.abs(remBN))}`:`剩 ${fmtN(remBN)}`}
+                        </span>
+                      </div>
+                    )}
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      <div style={{flex:1,height:7,background:"#e2e8f0",borderRadius:4,overflow:"hidden"}}>
+                        <div style={{width:`${pct}%`,height:"100%",background:bpColor,borderRadius:4,transition:"width .3s"}}/>
+                      </div>
+                      <span style={{fontSize:11,color:bpColor,fontWeight:700,minWidth:32,textAlign:"right"}}>{pct}%</span>
+                      <span style={{fontSize:11,color:"#94a3b8"}}>{done}/{total} 完成</span>
+                    </div>
+                  </div>
+                  {isExp&&(
+                    <div>
+                      {visTasks.map(t=>{
+                        const st=calcStatus(t),ss=S_STYLE[st];
+                        const taskBN=parseN(t.detail?.actualCost),overTask=totalBN>0&&usedBN>totalBN&&taskBN>0;
+                        const pctTask=totalBN>0&&taskBN>0?((taskBN/totalBN)*100).toFixed(1):null;
+                        return(
+                          <div key={t.id} style={{borderBottom:"1px solid #f1f5f9",background:t.done?"#fafafa":"white"}}>
+                            <div style={{padding:"10px 14px 4px",display:"flex",alignItems:"center",gap:8}}>
+                              <input type="checkbox" checked={t.done} onChange={()=>toggleDone(t.id)} style={{accentColor:bpColor,width:15,height:15,flexShrink:0,cursor:"pointer"}}/>
+                              <div style={{flex:1,minWidth:0}}>
+                                {editTaskId===t.id
+                                  ?<input autoFocus value={editTaskName} onChange={e=>setEditTaskName(e.target.value)}
+                                      onBlur={commitTaskEdit} onKeyDown={e=>{if(e.key==="Enter"||e.key==="Escape")e.currentTarget.blur();e.stopPropagation();}}
+                                      style={{width:"100%",fontSize:13,fontWeight:700,border:"none",borderBottom:`1.5px solid ${bpColor}`,outline:"none",background:"transparent",fontFamily:"inherit"}}/>
+                                  :<div onDoubleClick={()=>{setEditTaskId(t.id);setEditTaskName(t.name);}}
+                                      style={{fontSize:13,fontWeight:700,color:t.done?"#94a3b8":"#1e293b",textDecoration:t.done?"line-through":"none",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                                      {t.name}
+                                    </div>
+                                }
+                                {editDateId===t.id?(
+                                  <div style={{display:"flex",gap:3,alignItems:"center",marginTop:2}} onClick={e=>e.stopPropagation()}>
+                                    <input type="date" value={t.startDate} onChange={e=>updTask(t.id,tt=>({...tt,startDate:e.target.value}))}
+                                      style={{fontSize:11,border:"1px solid #cbd5e1",borderRadius:2,padding:"1px 2px",width:108,fontFamily:"inherit"}}/>
+                                    <span style={{fontSize:11,color:"#94a3b8"}}>~</span>
+                                    <input type="date" value={t.endDate} onChange={e=>updTask(t.id,tt=>({...tt,endDate:e.target.value}))}
+                                      style={{fontSize:11,border:"1px solid #cbd5e1",borderRadius:2,padding:"1px 2px",width:108,fontFamily:"inherit"}}/>
+                                    <button onClick={()=>setEditDateId(null)} style={{background:"none",border:"none",cursor:"pointer",fontSize:14,color:bpColor,padding:0,flexShrink:0,fontWeight:700}}>✓</button>
+                                  </div>
+                                ):(
+                                  <div onDoubleClick={()=>setEditDateId(t.id)} style={{fontSize:11,color:"#94a3b8",marginTop:1}}>{t.startDate?.slice(5)} → {t.endDate?.slice(5)} · {calcWorkDays(t.startDate,t.endDate)} 工作天</div>
+                                )}
+                              </div>
+                              <span style={{background:ss.bg,color:ss.color,border:`1px solid ${ss.border}`,display:"inline-block",padding:"2px 7px",borderRadius:10,fontSize:10,fontWeight:700,whiteSpace:"nowrap",flexShrink:0}}>{st}</span>
+                              <button onClick={()=>{setDrawerTaskId(id=>id===t.id?null:t.id);setDrawerTab("detail");}}
+                                style={{background:bpColor+"15",border:`1px solid ${bpColor}44`,color:bpColor,borderRadius:4,padding:"4px 8px",fontSize:12,fontWeight:700,cursor:"pointer",flexShrink:0}}>📋</button>
+                              <button onClick={()=>delTask(bp.id,t.id)}
+                                style={{background:"none",border:"none",cursor:"pointer",color:"#fca5a5",fontSize:15,padding:0,lineHeight:1,flexShrink:0}}
+                                onMouseEnter={e=>e.currentTarget.style.color="#ef4444"} onMouseLeave={e=>e.currentTarget.style.color="#fca5a5"}>🗑️</button>
+                            </div>
+                            <div style={{padding:"2px 14px 8px 37px",display:"flex",alignItems:"center",gap:6}}>
+                              <span style={{fontSize:11,color:"#94a3b8",flexShrink:0}}>費用</span>
+                              <input type="text" inputMode="numeric" value={t.detail?.actualCost||""} placeholder="—"
+                                onChange={e=>{const n=String(e.target.value).replace(/[^0-9]/g,"");setDetailField(t.id,"actualCost",n?Number(n).toLocaleString("zh-TW"):"");}} onClick={e=>e.stopPropagation()}
+                                style={{border:"none",borderBottom:`1px solid ${overTask?"#fca5a5":"#e2e8f0"}`,background:"transparent",fontSize:11,outline:"none",textAlign:"right",fontFamily:"inherit",width:90,color:overTask?"#ef4444":"#334155"}}/>
+                              <span style={{fontSize:11,color:"#94a3b8",flexShrink:0}}>元（含稅）</span>
+                              {pctTask&&<span style={{fontSize:11,fontWeight:700,color:overTask?"#ef4444":bpColor,flexShrink:0}}>{pctTask}%</span>}
+                              {overTask&&<span style={{fontSize:11,color:"#ef4444"}}>⚠ 超出預算</span>}
+                            </div>
+                          </div>
+                        );
+                      })}
+                      <div style={{padding:"10px 14px"}}>
+                        <button onClick={()=>openAddTask(bp.id)}
+                          style={{width:"100%",background:bpColor+"0d",border:`1px dashed ${bpColor}66`,color:bpColor,borderRadius:6,padding:"8px",fontSize:12,fontWeight:700,cursor:"pointer"}}>
+                          ＋ 新增工程
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            };
+            const allList=bigProjects.map((bp,idx)=>({bp,idx,visTasks:bp.tasks})).filter(x=>x.visTasks.length>0);
+            if(!hasBoth){
+              return <div style={{padding:"12px 12px 0"}}>{allList.map(renderCard)}</div>;
+            }
+            const projList=allList.filter(x=>!x.bp.isDaily);
+            const dailyList=allList.filter(x=>x.bp.isDaily);
+            return(
+              <div style={{padding:"12px 12px 0"}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,margin:"4px 0 10px",padding:"8px 12px",background:"#f1f5f9",borderRadius:8,borderLeft:"4px solid #64748b"}}>
+                  <span style={{fontSize:14,fontWeight:800,color:"#475569"}}>🏗️ 專案</span>
+                  <span style={{fontSize:11,color:"#94a3b8"}}>({projList.length} 項)</span>
+                </div>
+                {projList.map(renderCard)}
+                <div style={{display:"flex",alignItems:"center",gap:8,margin:"8px 0 10px",padding:"8px 12px",background:"#f1f5f9",borderRadius:8,borderLeft:"4px solid #64748b"}}>
+                  <span style={{fontSize:14,fontWeight:800,color:"#475569"}}>📅 Daily</span>
+                  <span style={{fontSize:11,color:"#94a3b8"}}>({dailyList.length} 項)</span>
+                </div>
+                {dailyList.map(renderCard)}
+              </div>
+            );
+          })()}
+          {mobileListView!=="all"&&(
+          <div style={{padding:"12px 12px 0"}}>
           {listProjects.map(({bp,idx:bpIdx,visTasks})=>{
             const bpColor=COLORS[bpIdx%COLORS.length];
             const total=bp.tasks.length,done=bp.tasks.filter(t=>t.done).length;
@@ -1286,6 +1442,8 @@ function doPost(e){
               </div>
             );
           })}
+        </div>
+        )}
         </div>
         )}
         {drawerInfo&&(
@@ -1541,4 +1699,3 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 </script>
 </body>
 </html>
-                                                                                                                                     
