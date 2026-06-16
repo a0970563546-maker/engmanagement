@@ -1092,7 +1092,7 @@ function doPost(e){
             const barL=(clipS.getDate()-1)*DAY_PX,barW=Math.max((diffDays(clipS,clipE)+1)*DAY_PX,DAY_PX);
             return(
               <div key={"t-"+t.id} style={{display:"flex",alignItems:"stretch",minHeight:32,borderBottom:"1px solid #f1f5f9",background:t.done?"#fafafa":"white",opacity:t.done?.7:1}}>
-                <div style={{width:LABEL_W,flexShrink:0,paddingLeft:20,paddingRight:6,paddingTop:4,paddingBottom:4,display:"flex",flexDirection:"column",justifyContent:"center",gap:2,minWidth:0,position:"sticky",left:0,zIndex:22,background:t.done?"#fafafa":"white"}}>
+                <div style={{width:LABEL_W,flexShrink:0,paddingLeft:20,paddingRight:6,paddingTop:4,paddingBottom:4,display:"flex",flexDirection:"column",justifyContent:"center",gap:2,minWidth:0,position:"sticky",left:0,zIndex:22,background:t.done?"#fafafa":"white",cursor:"pointer"}} onClick={()=>{setDrawerTaskId(t.id);setDrawerTab("detail");}}>
                   <div style={{fontSize:11,color:"#1e293b",fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.name}</div>
                   <div style={{fontSize:9,color:"#94a3b8",whiteSpace:"nowrap"}}>{t.startDate.slice(5)} ~ {t.endDate.slice(5)} · {calcWorkDays(t.startDate,t.endDate)} 工作天</div>
                 </div>
@@ -1269,9 +1269,9 @@ function doPost(e){
                         const taskBN=parseN(t.detail?.actualCost),overTask=totalBN>0&&usedBN>totalBN&&taskBN>0;
                         const pctTask=totalBN>0&&taskBN>0?((taskBN/totalBN)*100).toFixed(1):null;
                         return(
-                          <div key={t.id} style={{borderBottom:"1px solid #f1f5f9",background:t.done?"#fafafa":"white"}}>
+                          <div key={t.id} style={{borderBottom:"1px solid #f1f5f9",background:t.done?"#fafafa":"white",cursor:"pointer"}} onClick={()=>{setDrawerTaskId(t.id);setDrawerTab("detail");}}>
                             <div style={{padding:"10px 14px 4px",display:"flex",alignItems:"center",gap:8}}>
-                              <input type="checkbox" checked={t.done} onChange={()=>toggleDone(t.id)} style={{accentColor:bpColor,width:15,height:15,flexShrink:0,cursor:"pointer"}}/>
+                              <input type="checkbox" checked={t.done} onChange={()=>toggleDone(t.id)} onClick={e=>e.stopPropagation()} style={{accentColor:bpColor,width:15,height:15,flexShrink:0,cursor:"pointer"}}/>
                               <div style={{flex:1,minWidth:0}}>
                                 {editTaskId===t.id
                                   ?<input autoFocus value={editTaskName} onChange={e=>setEditTaskName(e.target.value)}
@@ -1296,9 +1296,9 @@ function doPost(e){
                                 )}
                               </div>
                               <span style={{background:ss.bg,color:ss.color,border:`1px solid ${ss.border}`,display:"inline-block",padding:"2px 7px",borderRadius:10,fontSize:10,fontWeight:700,whiteSpace:"nowrap",flexShrink:0}}>{st}</span>
-                              <button onClick={()=>{setDrawerTaskId(id=>id===t.id?null:t.id);setDrawerTab("detail");}}
+                              <button onClick={e=>{e.stopPropagation();setDrawerTaskId(id=>id===t.id?null:t.id);setDrawerTab("detail");}}
                                 style={{background:bpColor+"15",border:`1px solid ${bpColor}44`,color:bpColor,borderRadius:4,padding:"4px 8px",fontSize:12,fontWeight:700,cursor:"pointer",flexShrink:0}}>📋</button>
-                              <button onClick={()=>delTask(bp.id,t.id)}
+                              <button onClick={e=>{e.stopPropagation();delTask(bp.id,t.id);}}
                                 style={{background:"none",border:"none",cursor:"pointer",color:"#fca5a5",fontSize:15,padding:0,lineHeight:1,flexShrink:0}}
                                 onMouseEnter={e=>e.currentTarget.style.color="#ef4444"} onMouseLeave={e=>e.currentTarget.style.color="#fca5a5"}>🗑️</button>
                             </div>
@@ -1408,9 +1408,9 @@ function doPost(e){
                       const taskBN=parseN(t.detail?.actualCost),overTask=totalBN>0&&usedBN>totalBN&&taskBN>0;
                       const pctTask=totalBN>0&&taskBN>0?((taskBN/totalBN)*100).toFixed(1):null;
                       return(
-                        <div key={t.id} style={{borderBottom:"1px solid #f1f5f9",background:t.done?"#fafafa":"white"}}>
+                        <div key={t.id} style={{borderBottom:"1px solid #f1f5f9",background:t.done?"#fafafa":"white",cursor:"pointer"}} onClick={()=>{setDrawerTaskId(t.id);setDrawerTab("detail");}}>
                           <div style={{padding:"10px 14px 4px",display:"flex",alignItems:"center",gap:8}}>
-                            <input type="checkbox" checked={t.done} onChange={()=>toggleDone(t.id)} style={{accentColor:bpColor,width:15,height:15,flexShrink:0,cursor:"pointer"}}/>
+                            <input type="checkbox" checked={t.done} onChange={()=>toggleDone(t.id)} onClick={e=>e.stopPropagation()} style={{accentColor:bpColor,width:15,height:15,flexShrink:0,cursor:"pointer"}}/>
                             <div style={{flex:1,minWidth:0}}>
                               {editTaskId===t.id
                                 ?<input autoFocus value={editTaskName} onChange={e=>setEditTaskName(e.target.value)}
@@ -1435,9 +1435,9 @@ function doPost(e){
                               )}
                             </div>
                             <span style={{background:ss.bg,color:ss.color,border:`1px solid ${ss.border}`,display:"inline-block",padding:"2px 7px",borderRadius:10,fontSize:10,fontWeight:700,whiteSpace:"nowrap",flexShrink:0}}>{st}</span>
-                            <button onClick={()=>{setDrawerTaskId(id=>id===t.id?null:t.id);setDrawerTab("detail");}}
+                            <button onClick={e=>{e.stopPropagation();setDrawerTaskId(id=>id===t.id?null:t.id);setDrawerTab("detail");}}
                               style={{background:bpColor+"15",border:`1px solid ${bpColor}44`,color:bpColor,borderRadius:4,padding:"4px 8px",fontSize:12,fontWeight:700,cursor:"pointer",flexShrink:0}}>📋</button>
-                            <button onClick={()=>delTask(bp.id,t.id)}
+                            <button onClick={e=>{e.stopPropagation();delTask(bp.id,t.id);}}
                               style={{background:"none",border:"none",cursor:"pointer",color:"#fca5a5",fontSize:15,padding:0,lineHeight:1,flexShrink:0}}
                               onMouseEnter={e=>e.currentTarget.style.color="#ef4444"} onMouseLeave={e=>e.currentTarget.style.color="#fca5a5"}>🗑️</button>
                           </div>
@@ -1548,7 +1548,7 @@ function doPost(e){
           const taskBN=parseN(t.detail?.actualCost),overTask=totalBN>0&&usedBN>totalBN&&taskBN>0;
           const pctTask=totalBN>0&&taskBN>0?((taskBN/totalBN)*100).toFixed(1):null;
           return(
-            <div key={t.id} className="t-row" style={{borderBottom:"1px solid #f1f5f9",background:"white",opacity:t.done?.65:1}}>
+            <div key={t.id} className="t-row" style={{borderBottom:"1px solid #f1f5f9",background:"white",opacity:t.done?.65:1,cursor:"pointer"}} onClick={()=>{setDrawerTaskId(t.id);setDrawerTab("detail");}}>
               <div style={{display:"flex",alignItems:"center",gap:4,padding:"5px 5px 1px 20px"}}>
                 <span style={{color:bpColor,fontSize:12,flexShrink:0,lineHeight:1}}>·</span>
                 {editTaskId===t.id
