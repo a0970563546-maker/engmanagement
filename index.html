@@ -1036,10 +1036,10 @@ function doPost(e){
           {m.getFullYear()} 年 {m.getMonth()+1} 月
           {isCurM&&<span style={{marginLeft:10,fontSize:10,background:"#ef4444",padding:"1px 7px",borderRadius:8,fontWeight:700}}>本月</span>}
         </div>
-        <div style={{position:"relative",border:"1px solid #e2e8f0",borderTop:"none",borderRadius:"0 0 6px 6px",overflow:"hidden"}}>
+        <div style={{position:"relative",border:"1px solid #e2e8f0",borderTop:"none",borderRadius:"0 0 6px 6px",overflow:"clip"}}>
           {isCurM&&<div style={{position:"absolute",left:LABEL_W+todayD*DAY_PX+DAY_PX/2-1,top:0,bottom:0,width:2,background:"#ef4444",zIndex:20,pointerEvents:"none"}}/>}
           <div style={{display:"flex",borderBottom:"2px solid #cbd5e1",background:"#f8fafc"}}>
-            <div style={{width:LABEL_W,flexShrink:0,display:"flex",alignItems:"center",paddingLeft:10,fontSize:10,fontWeight:700,color:"#64748b"}}>{colLabel}</div>
+            <div style={{width:LABEL_W,flexShrink:0,display:"flex",alignItems:"center",paddingLeft:10,fontSize:10,fontWeight:700,color:"#64748b",position:"sticky",left:0,zIndex:22,background:"#f8fafc"}}>{colLabel}</div>
             {Array.from({length:days},(_,d)=>{
               const date=new Date(m.getFullYear(),m.getMonth(),d+1);
               const dow=date.getDay(),isWE=dow===0||dow===6,isHD=isHoliday(date),isTD=d===todayD;
@@ -1060,7 +1060,7 @@ function doPost(e){
             if(row.type==="section"){
               return(
                 <div key={"sec-"+ri} style={{display:"flex",alignItems:"center",height:24,background:row.color+"18",borderBottom:`2px solid ${row.color}44`,borderTop:ri>0?"1px solid #e2e8f0":"none"}}>
-                  <div style={{width:LABEL_W,flexShrink:0,paddingLeft:10,fontSize:10,fontWeight:800,color:row.color,letterSpacing:".04em"}}>{row.label}</div>
+                  <div style={{width:LABEL_W,flexShrink:0,paddingLeft:10,fontSize:10,fontWeight:800,color:row.color,letterSpacing:".04em",position:"sticky",left:0,zIndex:22,background:row.color+"18"}}>{row.label}</div>
                   <div style={{position:"relative",width:W,height:"100%",flexShrink:0,background:row.color+"08"}}/>
                 </div>
               );
@@ -1069,7 +1069,7 @@ function doPost(e){
               const{bp,bpColor}=row;
               return(
                 <div key={"bp-"+bp.id} style={{display:"flex",alignItems:"center",height:BP_H,background:bpColor+"0d",borderBottom:`1px solid ${bpColor}33`}}>
-                  <div style={{width:LABEL_W,flexShrink:0,paddingLeft:10,paddingRight:6,fontSize:11,fontWeight:700,color:bpColor,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                  <div style={{width:LABEL_W,flexShrink:0,paddingLeft:10,paddingRight:6,fontSize:11,fontWeight:700,color:bpColor,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",position:"sticky",left:0,zIndex:22,background:bpColor+"0d"}}>
                     {bp.collapsed?"▶ ":"▼ "}{bp.name}
                   </div>
                   <div style={{position:"relative",width:W,height:"100%",flexShrink:0}}>
@@ -1089,7 +1089,7 @@ function doPost(e){
             const barL=(clipS.getDate()-1)*DAY_PX,barW=Math.max((diffDays(clipS,clipE)+1)*DAY_PX,DAY_PX);
             return(
               <div key={"t-"+t.id} style={{display:"flex",alignItems:"stretch",minHeight:32,borderBottom:"1px solid #f1f5f9",background:t.done?"#fafafa":"white",opacity:t.done?.7:1}}>
-                <div style={{width:LABEL_W,flexShrink:0,paddingLeft:20,paddingRight:6,paddingTop:4,paddingBottom:4,display:"flex",flexDirection:"column",justifyContent:"center",gap:2,minWidth:0}}>
+                <div style={{width:LABEL_W,flexShrink:0,paddingLeft:20,paddingRight:6,paddingTop:4,paddingBottom:4,display:"flex",flexDirection:"column",justifyContent:"center",gap:2,minWidth:0,position:"sticky",left:0,zIndex:22,background:t.done?"#fafafa":"white"}}>
                   <div style={{fontSize:11,color:"#1e293b",fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.name}</div>
                   <div style={{fontSize:9,color:"#94a3b8",whiteSpace:"nowrap"}}>{t.startDate.slice(5)} ~ {t.endDate.slice(5)} · {calcWorkDays(t.startDate,t.endDate)} 工作天</div>
                 </div>
