@@ -773,7 +773,7 @@ function doPost(e){
       for(let d=1;d<=ndays;d++){
         const date=new Date(y,mo,d);
         const dow=date.getDay(),isWE=dow===0||dow===6,isHD=isHoliday(date),isTD=dateKey(date)===todayK;
-        const bg=isTD?"#fde68a":isHD?"#ecfdf5":isWE?"#f1f5f9":"transparent";
+        const bg=isTD?"#fde68a":isHD?"#ecfdf5":isWE?"#dde3eb":"transparent";
         const fc=isTD?"#92400e":isHD?"#15803d":isWE?"#64748b":"#475569";
         const wc=isTD?"#b45309":isHD?"#16a34a":isWE?"#94a3b8":"#94a3b8";
         const bold=(isTD||isHD)?800:500;
@@ -788,7 +788,7 @@ function doPost(e){
       for(let d=1;d<=ndays;d++){
         const date=new Date(y,mo,d);
         const dow=date.getDay(),isWE=dow===0||dow===6,isHD=isHoliday(date),isTD=dateKey(date)===todayK;
-        const bg=isTD?"#fef3c7":isHD?"#ecfdf5":isWE?"#f1f5f9":"transparent";
+        const bg=isTD?"#fef3c7":isHD?"#ecfdf5":isWE?"#dde3eb":"transparent";
         out+=`<div style="position:absolute;left:${(d-1)*DAY_PX}px;top:0;width:${DAY_PX}px;height:100%;background:${bg};border-right:1px solid #f8fafc;"></div>`;
       }
       return out;
@@ -1025,11 +1025,16 @@ function doPost(e){
       ...(hasBoth?[{type:"section",label:"📅 Daily",color:"#7c3aed"}]:[]),
       ...dailyRows,
     ];
-    const DayCells=({total})=>Array.from({length:total},(_,d)=>{
-      const cd=new Date(m.getFullYear(),m.getMonth(),d+1);
-      const dow=cd.getDay(),isWE=dow===0||dow===6,isTD=d===todayD,isHD=isHoliday(cd);
-      return <div key={d} style={{position:"absolute",left:d*DAY_PX,top:0,width:DAY_PX,height:"100%",background:isTD?"#fef3c7":isHD?"#ecfdf5":isWE?"#f1f5f9":"transparent",borderRight:d===total-1?"none":"1px solid #f8fafc"}}/>;
-    });
+    const stripeBg=(()=>{
+      const stops=[];
+      for(let d=0;d<days;d++){
+        const cd=new Date(m.getFullYear(),m.getMonth(),d+1);
+        const dow=cd.getDay(),isWE=dow===0||dow===6,isTD=d===todayD,isHD=isHoliday(cd);
+        const bg=isTD?"#fef3c7":isHD?"#ecfdf5":isWE?"#dde3eb":"transparent";
+        stops.push(`${bg} ${d*DAY_PX}px`,`${bg} ${(d+1)*DAY_PX}px`);
+      }
+      return `linear-gradient(to right,${stops.join(",")})`;
+    })();
     return(
       <div key={mi} style={{marginBottom:28,minWidth:LABEL_W+W}}>
         <div style={{background:"#1e293b",color:"white",borderRadius:"6px 6px 0 0",display:"flex",alignItems:"center",minWidth:LABEL_W+W}}>
@@ -1038,16 +1043,16 @@ function doPost(e){
             {isCurM&&<span style={{marginLeft:10,fontSize:10,background:"#ef4444",padding:"1px 7px",borderRadius:8,fontWeight:700}}>本月</span>}
           </div>
         </div>
-        <div style={{position:"relative",border:"1px solid #e2e8f0",borderTop:"none",borderRadius:"0 0 6px 6px",overflow:"clip"}}>
+        <div style={{position:"relative",border:"1px solid #e2e8f0",borderTop:"none",borderRadius:"0 0 6px 6px"}}>
           {isCurM&&<div style={{position:"absolute",left:LABEL_W+todayD*DAY_PX+DAY_PX/2-1,top:0,bottom:0,width:2,background:"#ef4444",zIndex:20,pointerEvents:"none"}}/>}
           <div style={{display:"flex",borderBottom:"2px solid #cbd5e1",background:"#f8fafc"}}>
             <div style={{width:LABEL_W,flexShrink:0,display:"flex",alignItems:"center",paddingLeft:10,fontSize:10,fontWeight:700,color:"#64748b",position:"sticky",left:0,zIndex:22,background:"#f8fafc"}}>{colLabel}</div>
             {Array.from({length:days},(_,d)=>{
               const date=new Date(m.getFullYear(),m.getMonth(),d+1);
               const dow=date.getDay(),isWE=dow===0||dow===6,isHD=isHoliday(date),isTD=d===todayD;
-              const bg=isTD?"#fde68a":isHD?"#ecfdf5":isWE?"#f1f5f9":"transparent";
-              const fc=isTD?"#92400e":isHD?"#15803d":isWE?"#64748b":"#475569";
-              const wc=isTD?"#b45309":isHD?"#16a34a":isWE?"#94a3b8":"#94a3b8";
+              const bg=isTD?"#fde68a":isHD?"#ecfdf5":isWE?"#dde3eb":"transparent";
+              const fc=isTD?"#92400e":isHD?"#15803d":isWE?"#1e40af":"#475569";
+              const wc=isTD?"#b45309":isHD?"#16a34a":isWE?"#3b82f6":"#94a3b8";
               return(
                 <div key={d} title={isHD?holidayName(date):undefined}
                   onClick={isHD?(e)=>{e.stopPropagation();const r=e.currentTarget.getBoundingClientRect();setHolidayTip({x:r.left,y:r.bottom+4,name:holidayName(date)});}:undefined}
@@ -1074,8 +1079,7 @@ function doPost(e){
                   <div style={{width:LABEL_W,flexShrink:0,paddingLeft:10,paddingRight:6,fontSize:11,fontWeight:700,color:bpColor,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",position:"sticky",left:0,zIndex:22,background:bpColor+"0d"}}>
                     {bp.collapsed?"▶ ":"▼ "}{bp.name}
                   </div>
-                  <div style={{position:"relative",width:W,height:"100%",flexShrink:0}}>
-                    <DayCells total={days}/>
+                  <div style={{position:"relative",width:W,flexShrink:0,alignSelf:"stretch",background:stripeBg}}>
                   </div>
                 </div>
               );
@@ -1095,8 +1099,7 @@ function doPost(e){
                   <div style={{fontSize:11,color:"#1e293b",fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.name}</div>
                   <div style={{fontSize:9,color:"#94a3b8",whiteSpace:"nowrap"}}>{t.startDate.slice(5)} ~ {t.endDate.slice(5)} · {calcWorkDays(t.startDate,t.endDate)} 工作天</div>
                 </div>
-                <div style={{position:"relative",width:W,height:"100%",flexShrink:0}}>
-                  <DayCells total={days}/>
+                <div style={{position:"relative",width:W,flexShrink:0,alignSelf:"stretch",background:stripeBg}}>
                   <div style={{position:"absolute",left:barL,top:5,width:barW,height:22,borderRadius:11,background:barColor+"33",overflow:"visible"}}
                     onMouseEnter={()=>setHovered(t.id)} onMouseLeave={()=>setHovered(null)}>
                     {!t.done&&<div style={{position:"absolute",left:0,top:0,height:"100%",width:`${pct}%`,background:barColor,borderRadius:11}}/>}
