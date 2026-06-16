@@ -188,7 +188,7 @@ function DetailPanel({t,color,setStepField}){
       e.stopPropagation();const v=e.target.value;
       if(v.startsWith("=")){setStepField(t.id,"contactDeposit.amount",v);return;}
       const n=v.replace(/[^0-9]/g,"");
-      setStepField(t.id,"contactDeposit.amount",n?fmtN(Number(n)):"");
+      setStepField(t.id,"contactDeposit.amount",n);
       if(!n){setStepField(t.id,"contactDeposit.percent","");return;}
       const act=actNum();if(act)setStepField(t.id,"contactDeposit.percent",((Number(n)/act)*100).toFixed(1));
     };
@@ -486,8 +486,8 @@ function App(){
     for(let i=0;i<p.length-1;i++)o=o[p[i]];
     o[p[p.length-1]]=val;return{...t,steps:st};
   });
-  const setBpBudget=(bpId,val)=>updBp(bp=>bp.id===bpId?{...bp,totalBudget:val?fmtN(parseN(val)):""}:bp);
-  const setTaskBudget=(tid,val)=>updTask(tid,t=>({...t,taskBudget:val?fmtN(parseN(val)):""}));
+  const setBpBudget=(bpId,val)=>updBp(bp=>bp.id===bpId?{...bp,totalBudget:val.replace(/[^0-9]/g,"")}:bp);const fmtBpBudget=(bpId)=>updBp(bp=>bp.id===bpId?{...bp,totalBudget:bp.totalBudget?fmtN(parseN(bp.totalBudget)):""}:bp);
+  const setTaskBudget=(tid,val)=>updTask(tid,t=>({...t,taskBudget:val.replace(/[^0-9]/g,"")}));const fmtTaskBudget=(tid)=>updTask(tid,t=>({...t,taskBudget:t.taskBudget?fmtN(parseN(t.taskBudget)):""}));
   const addBigProject=(isDaily=false)=>mutateBigProjects(bps=>[...bps,mkBigProject(isDaily?"新平日工作事項":"新大專案",isDaily)]);
   const delBigProject=bpId=>{
     if(!window.confirm("確定要刪除此大專案及所有工程嗎？"))return;
@@ -1241,7 +1241,7 @@ function doPost(e){
                     <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:totalBN>0?4:8}}>
                       <span style={{fontSize:11,color:"#64748b",flexShrink:0}}>總預算</span>
                       <input type="text" inputMode="numeric" value={bp.totalBudget} placeholder="—"
-                        onChange={e=>setBpBudget(bp.id,e.target.value)} onClick={e=>e.stopPropagation()}
+                        onChange={e=>setBpBudget(bp.id,e.target.value)} onBlur={()=>fmtBpBudget(bp.id)} onFocus={e=>{setBpBudget(bp.id,e.target.value.replace(/[^0-9]/g,""));}} onClick={e=>e.stopPropagation()}
                         style={{border:"1px solid #e2e8f0",borderRadius:4,padding:"2px 6px",fontSize:11,outline:"none",textAlign:"right",fontFamily:"inherit",width:110}}/>
                       <span style={{fontSize:11,color:"#64748b"}}>元（含稅）</span>
                       {active>0&&<span style={{marginLeft:"auto",fontSize:11,color:"#2563eb",fontWeight:700,background:"#eff6ff",padding:"2px 7px",borderRadius:8,whiteSpace:"nowrap"}}>{active} 執行中</span>}
@@ -1308,7 +1308,7 @@ function doPost(e){
                             <div style={{padding:"2px 14px 8px 37px",display:"flex",alignItems:"center",gap:6}}>
                               <span style={{fontSize:11,color:"#94a3b8",flexShrink:0}}>費用</span>
                               <input type="text" inputMode="numeric" value={t.detail?.actualCost||""} placeholder="—"
-                                onChange={e=>{const n=String(e.target.value).replace(/[^0-9]/g,"");setDetailField(t.id,"actualCost",n?Number(n).toLocaleString("zh-TW"):"");}} onClick={e=>e.stopPropagation()}
+                                onChange={e=>{const n=String(e.target.value).replace(/[^0-9]/g,"");setDetailField(t.id,"actualCost",n);}} onBlur={e=>{const n=String(e.target.value).replace(/[^0-9]/g,"");setDetailField(t.id,"actualCost",n?Number(n).toLocaleString("zh-TW"):"");}} onFocus={e=>{setDetailField(t.id,"actualCost",String(e.target.value).replace(/[^0-9]/g,""));}} onClick={e=>e.stopPropagation()}
                                 style={{border:"none",borderBottom:`1px solid ${overTask?"#fca5a5":"#e2e8f0"}`,background:"transparent",fontSize:11,outline:"none",textAlign:"right",fontFamily:"inherit",width:90,color:overTask?"#ef4444":"#334155"}}/>
                               <span style={{fontSize:11,color:"#94a3b8",flexShrink:0}}>元（含稅）</span>
                               {pctTask&&<span style={{fontSize:11,fontWeight:700,color:overTask?"#ef4444":bpColor,flexShrink:0}}>{pctTask}%</span>}
@@ -1380,7 +1380,7 @@ function doPost(e){
                   <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:totalBN>0?4:8}}>
                     <span style={{fontSize:11,color:"#64748b",flexShrink:0}}>總預算</span>
                     <input type="text" inputMode="numeric" value={bp.totalBudget} placeholder="—"
-                      onChange={e=>setBpBudget(bp.id,e.target.value)} onClick={e=>e.stopPropagation()}
+                      onChange={e=>setBpBudget(bp.id,e.target.value)} onBlur={()=>fmtBpBudget(bp.id)} onFocus={e=>{setBpBudget(bp.id,e.target.value.replace(/[^0-9]/g,""));}} onClick={e=>e.stopPropagation()}
                       style={{border:"1px solid #e2e8f0",borderRadius:4,padding:"2px 6px",fontSize:11,outline:"none",textAlign:"right",fontFamily:"inherit",width:110}}/>
                     <span style={{fontSize:11,color:"#64748b"}}>元（含稅）</span>
                     {active>0&&<span style={{marginLeft:"auto",fontSize:11,color:"#2563eb",fontWeight:700,background:"#eff6ff",padding:"2px 7px",borderRadius:8,whiteSpace:"nowrap"}}>{active} 執行中</span>}
@@ -1447,7 +1447,7 @@ function doPost(e){
                           <div style={{padding:"2px 14px 8px 37px",display:"flex",alignItems:"center",gap:6}}>
                             <span style={{fontSize:11,color:"#94a3b8",flexShrink:0}}>費用</span>
                             <input type="text" inputMode="numeric" value={t.detail?.actualCost||""} placeholder="—"
-                              onChange={e=>{const n=String(e.target.value).replace(/[^0-9]/g,"");setDetailField(t.id,"actualCost",n?Number(n).toLocaleString("zh-TW"):"");}} onClick={e=>e.stopPropagation()}
+                              onChange={e=>{const n=String(e.target.value).replace(/[^0-9]/g,"");setDetailField(t.id,"actualCost",n);}} onBlur={e=>{const n=String(e.target.value).replace(/[^0-9]/g,"");setDetailField(t.id,"actualCost",n?Number(n).toLocaleString("zh-TW"):"");}} onFocus={e=>{setDetailField(t.id,"actualCost",String(e.target.value).replace(/[^0-9]/g,""));}} onClick={e=>e.stopPropagation()}
                               style={{border:"none",borderBottom:`1px solid ${overTask?"#fca5a5":"#e2e8f0"}`,background:"transparent",fontSize:11,outline:"none",textAlign:"right",fontFamily:"inherit",width:90,color:overTask?"#ef4444":"#334155"}}/>
                             <span style={{fontSize:11,color:"#94a3b8",flexShrink:0}}>元（含稅）</span>
                             {pctTask&&<span style={{fontSize:11,fontWeight:700,color:overTask?"#ef4444":bpColor,flexShrink:0}}>{pctTask}%</span>}
@@ -1529,7 +1529,7 @@ function doPost(e){
             <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:totalBN>0?3:0}}>
               <span style={{fontSize:10,color:"#94a3b8",flexShrink:0}}>💰 總預算</span>
               <input type="text" inputMode="numeric" value={bp.totalBudget} placeholder="—"
-                onChange={e=>setBpBudget(bp.id,e.target.value)} onClick={e=>e.stopPropagation()}
+                onChange={e=>setBpBudget(bp.id,e.target.value)} onBlur={()=>fmtBpBudget(bp.id)} onFocus={e=>{setBpBudget(bp.id,e.target.value.replace(/[^0-9]/g,""));}} onClick={e=>e.stopPropagation()}
                 style={{border:"none",background:"transparent",fontSize:10,outline:"none",textAlign:"right",fontFamily:"inherit",flex:1,minWidth:0,color:"#334155"}}/>
               <span style={{fontSize:10,color:"#94a3b8",flexShrink:0}}>元（含稅）</span>
             </div>
@@ -1579,7 +1579,7 @@ function doPost(e){
               <div style={{display:"flex",alignItems:"center",gap:4,padding:"1px 5px 5px 28px"}}>
                 <span style={{fontSize:10,color:"#94a3b8",flexShrink:0}}>費用</span>
                 <input type="text" inputMode="numeric" value={t.detail?.actualCost||""} placeholder="—"
-                  onChange={e=>{const n=String(e.target.value).replace(/[^0-9]/g,"");setDetailField(t.id,"actualCost",n?Number(n).toLocaleString("zh-TW"):"");}} onClick={e=>e.stopPropagation()}
+                  onChange={e=>{const n=String(e.target.value).replace(/[^0-9]/g,"");setDetailField(t.id,"actualCost",n);}} onBlur={e=>{const n=String(e.target.value).replace(/[^0-9]/g,"");setDetailField(t.id,"actualCost",n?Number(n).toLocaleString("zh-TW"):"");}} onFocus={e=>{setDetailField(t.id,"actualCost",String(e.target.value).replace(/[^0-9]/g,""));}} onClick={e=>e.stopPropagation()}
                   style={{border:"none",borderBottom:`1px solid ${overTask?"#fca5a5":"#e2e8f0"}`,background:"transparent",fontSize:10,outline:"none",textAlign:"right",fontFamily:"inherit",width:80,color:overTask?"#ef4444":"#334155"}}/>
                 <span style={{fontSize:10,color:"#94a3b8",flexShrink:0}}>元（含稅）</span>
                 {pctTask&&<span style={{fontSize:10,fontWeight:700,color:overTask?"#ef4444":bpColor,marginLeft:2,flexShrink:0}}>{pctTask}%</span>}
