@@ -9,7 +9,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }h
     html, body, #root { height: 100%; }
     body { font-family: system-ui, -apple-system, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif; background: #f8fafc; overflow: hidden; font-weight: 500; }
     @media (max-width: 767px) {
@@ -1187,7 +1187,7 @@ function doPost(e){
               ))}
               {isLandscape&&<span style={{marginLeft:"auto",fontSize:11,color:"#94a3b8",flexShrink:0,whiteSpace:"nowrap"}}>← 左右滑動查看所有日期</span>}
             </div>
-            <div style={{overflowX:"auto",overflowY:"auto",padding:isLandscape?"4px 10px 6px":"10px 10px 24px",background:"white",height:isLandscape?"calc(100vh - 100px)":"auto"}}>
+            <div style={{overflowX:"auto",overflowY:"auto",padding:isLandscape?"4px 10px 6px":"10px 10px 24px",background:"white",height:isLandscape?"calc(100vh - 100px)":"auto",overscrollBehavior:isLandscape?"contain":"auto",touchAction:isLandscape?"pan-x pan-y":"auto"}}>
               {ganttBigProjects.length===0
                 ?<div style={{textAlign:"center",color:"#94a3b8",fontSize:13,padding:"40px 0"}}>目前沒有符合此檢視的工程項目</div>
                 :ganttMonthsEl}
