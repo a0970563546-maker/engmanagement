@@ -126,8 +126,8 @@ function ProjectDetailForm({t,setDetailField,color}){
             onChange={e=>{e.stopPropagation();setDetailField(t.id,key,e.target.value);}}
             style={{...inp,resize:"vertical",minHeight:60}} onFocus={e=>fo(e,color)} onBlur={bl}/>}
           {type==="numfmt"&&<input type="text" inputMode="numeric" value={det[key]??""} onClick={e=>e.stopPropagation()}
-            onChange={e=>{e.stopPropagation();const n=String(e.target.value).replace(/[^0-9]/g,"");setDetailField(t.id,key,n?Number(n).toLocaleString("zh-TW"):"");}}
-            style={{...inp,textAlign:"right"}} onFocus={e=>fo(e,color)} onBlur={bl} placeholder="0"/>}
+            onChange={e=>{e.stopPropagation();const n=String(e.target.value).replace(/[^0-9]/g,"");setDetailField(t.id,key,n);}}
+            onBlur={e=>{e.stopPropagation();const n=String(e.target.value).replace(/[^0-9]/g,"");setDetailField(t.id,key,n?Number(n).toLocaleString("zh-TW"):"");}} onFocus={e=>{fo(e,color);setDetailField(t.id,key,String(e.target.value).replace(/[^0-9]/g,""));}} style={{...inp,textAlign:"right"}} placeholder="0"/>}
           {type==="text"&&<input type="text" value={det[key]??""} onClick={e=>e.stopPropagation()}
             onChange={e=>{e.stopPropagation();setDetailField(t.id,key,e.target.value);}}
             style={inp} onFocus={e=>fo(e,color)} onBlur={bl}/>}
@@ -193,7 +193,7 @@ function DetailPanel({t,color,setStepField}){
       const act=actNum();if(act)setStepField(t.id,"contactDeposit.percent",((Number(n)/act)*100).toFixed(1));
     };
     const onAmtBlur=()=>{
-      const v=t.steps.contactDeposit.amount||"";if(!v.startsWith("="))return;
+      const v=t.steps.contactDeposit.amount||"";if(!v.startsWith("=")){const n=v.replace(/[^0-9]/g,"");if(n)setStepField(t.id,"contactDeposit.amount",fmtN(Number(n)));return;}
       const r=evalExpr(v);if(r===null)return;
       const base=extractBase(v)||actNum();
       setStepField(t.id,"contactDeposit.amount",fmtN(r));
@@ -212,16 +212,13 @@ function DetailPanel({t,color,setStepField}){
             onChange={onAmtChange} onBlur={onAmtBlur}
             onKeyDown={e=>{if(e.key==="Enter"){e.stopPropagation();onAmtBlur();e.target.blur();}}}
             style={{...iS,width:"100%",color:(t.steps.contactDeposit.amount||"").startsWith("=")?"\#7c3aed":"inherit"}}
-            onFocus={e=>e.target.style.borderColor=color}/>
+            onFocus={e=>{e.target.style.borderColor=color;const v=e.target.value;if(!v.startsWith("=")){setStepField(t.id,"contactDeposit.amount",v.replace(/[^0-9]/g,""));}}}/>
           <span style={{fontSize:10,color:"#64748b",flexShrink:0,whiteSpace:"nowrap"}}>元（含稅）</span>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:3,width:72}}>
           <input type="text" inputMode="numeric" placeholder="%" value={t.steps.contactDeposit.percent??""} onClick={e=>e.stopPropagation()}
-            onChange={onPctChange} style={{...iS,width:"100%"}}
-            onFocus={e=>e.target.style.borderColor=color} onBlur={e=>e.target.style.borderColor="#cbd5e1"}/>
-          <span style={{fontSize:10,color:"#64748b",flexShrink:0}}>%</span>
-        </div>
-      </div>
+setStepField(t.id,"contactDeposit.amount",n);          <span style={{fontSize:10,color:"#64748b",flexShrink:0}}>%</span>
+setStepField(t.id,"contactDeposit.amount",n);      </div>
     );
   };
   return(
@@ -238,7 +235,7 @@ function DetailPanel({t,color,setStepField}){
         <div style={{paddingLeft:6,marginBottom:6}}>
           <div style={subLabel}>（訂金）</div>
           <div style={{paddingLeft:6}}>
-            <DepositRow/>
+            {DepositRow()}
             <div style={{marginBottom:4}}><Chk label="已收到發票" path="contactDeposit.invoiceReceived" val={t.steps.contactDeposit.invoiceReceived}/></div>
             <DateRow label="查照完成" path="contactDeposit.confirmedDate" val={t.steps.contactDeposit.confirmedDate}/>
             <DateRow label="匯款" path="contactDeposit.remittanceDate" val={t.steps.contactDeposit.remittanceDate}/>
