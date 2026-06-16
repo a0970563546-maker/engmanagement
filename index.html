@@ -88,6 +88,16 @@ const useWindowWidth=()=>{
   useEffect(()=>{const h=()=>setW(window.innerWidth);window.addEventListener("resize",h);return()=>window.removeEventListener("resize",h);},[]);
   return w;
 };
+const useWindowHeight=()=>{
+  const[h,setH]=useState(window.innerHeight);
+  useEffect(()=>{
+    const upd=()=>setH(window.innerHeight);
+    window.addEventListener("resize",upd);
+    window.addEventListener("orientationchange",upd);
+    return()=>{window.removeEventListener("resize",upd);window.removeEventListener("orientationchange",upd);};
+  },[]);
+  return h;
+};
 function ProjectDetailForm({t,setDetailField,color}){
   const det=t.detail||{};
   const addImages=files=>Array.from(files).forEach(file=>{
@@ -440,7 +450,9 @@ function App(){
     }
     else setShowAddTypeModal(true);
   };
-  const isMobile=useWindowWidth()<768;
+  const windowW=useWindowWidth(), windowH=useWindowHeight();
+  const isMobile=windowW<768;
+  const isLandscape=isMobile&&windowW>windowH;
   // ===== 復原（最多 3 步）=====
   const historyRef=React.useRef([]);
   const[undoCount,setUndoCount]=useState(0);
@@ -1112,8 +1124,8 @@ function doPost(e){
     const drawerInfo=drawerTaskId?findInfo(drawerTaskId):null;
     return(
       <div style={{minHeight:"100vh",background:"#f0f4f8",paddingBottom:32}} onClick={()=>setHolidayTip(null)}>
-        <div style={{background:"#1d4ed8",color:"white",padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",position:"sticky",top:0,zIndex:30}}>
-          <div>
+        <div style={{background:"#1d4ed8",color:"white",padding:isLandscape?"6px 12px":"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",position:"sticky",top:0,zIndex:30}}>
+          <div style={{display:isLandscape?"none":"block"}}>
             <div style={{fontWeight:800,fontSize:16}}>🏗️ 工程管理系統</div>
             <div style={{color:"#93c5fd",fontSize:11,marginTop:1}}>雙擊名稱可改名</div>
           </div>
@@ -1144,25 +1156,33 @@ function doPost(e){
         {SYNC_LABEL[syncStatus]&&<div style={{position:"sticky",top:54,zIndex:31,background:"#1e293b",color:"white",fontSize:12,textAlign:"center",padding:"4px"}}>{SYNC_LABEL[syncStatus]}</div>}
         <div style={{display:"flex",position:"sticky",top:SYNC_LABEL[syncStatus]?86:54,zIndex:29,background:"#f0f4f8",borderBottom:"1px solid #e2e8f0"}}>
           <button onClick={()=>setMobileTab("list")}
-            style={{flex:1,padding:"9px 0",border:"none",background:"none",fontSize:13,fontWeight:700,cursor:"pointer",color:mobileTab==="list"?"#1d4ed8":"#94a3b8",borderBottom:mobileTab==="list"?"2px solid #1d4ed8":"2px solid transparent"}}>
+            style={{flex:1,padding:isLandscape?"5px 0":"9px 0",border:"none",background:"none",fontSize:isLandscape?12:13,fontWeight:700,cursor:"pointer",color:mobileTab==="list"?"#1d4ed8":"#94a3b8",borderBottom:mobileTab==="list"?"2px solid #1d4ed8":"2px solid transparent"}}>
             📋 專案清單
           </button>
           <button onClick={()=>setMobileTab("gantt")}
-            style={{flex:1,padding:"9px 0",border:"none",background:"none",fontSize:13,fontWeight:700,cursor:"pointer",color:mobileTab==="gantt"?"#1d4ed8":"#94a3b8",borderBottom:mobileTab==="gantt"?"2px solid #1d4ed8":"2px solid transparent"}}>
+            style={{flex:1,padding:isLandscape?"5px 0":"9px 0",border:"none",background:"none",fontSize:isLandscape?12:13,fontWeight:700,cursor:"pointer",color:mobileTab==="gantt"?"#1d4ed8":"#94a3b8",borderBottom:mobileTab==="gantt"?"2px solid #1d4ed8":"2px solid transparent"}}>
             📊 甘特圖
           </button>
         </div>
         {mobileTab==="gantt"&&(
           <>
-            <div style={{display:"flex",gap:6,alignItems:"center",padding:"8px 10px",background:"#f8fafc",borderBottom:"1px solid #e2e8f0",overflowX:"auto"}}>
+            {/* 直向時顯示橫轉提示 */}
+            {!isLandscape&&(
+              <div style={{background:"#fffbeb",borderBottom:"1px solid #fde68a",padding:"5px 12px",display:"flex",alignItems:"center",gap:8,fontSize:12,color:"#92400e"}}>
+                <span style={{fontSize:15}}>📱</span>
+                <span>橫放手機可看到更多日期欄位</span>
+              </div>
+            )}
+            <div style={{display:"flex",gap:6,alignItems:"center",padding:isLandscape?"5px 10px":"8px 10px",background:"#f8fafc",borderBottom:"1px solid #e2e8f0",overflowX:"auto"}}>
               {[["all","🔗 全部"],["project","🏗️ 專案"],["daily","📅 Daily"]].map(([key,label])=>(
                 <button key={key} onClick={()=>setGanttView(key)}
-                  style={{flexShrink:0,background:ganttView===key?"#1d4ed8":"white",color:ganttView===key?"white":"#475569",border:"1px solid "+(ganttView===key?"#1d4ed8":"#cbd5e1"),borderRadius:5,padding:"4px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>
+                  style={{flexShrink:0,background:ganttView===key?"#1d4ed8":"white",color:ganttView===key?"white":"#475569",border:"1px solid "+(ganttView===key?"#1d4ed8":"#cbd5e1"),borderRadius:5,padding:isLandscape?"3px 10px":"4px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>
                   {label}
                 </button>
               ))}
+              {isLandscape&&<span style={{marginLeft:"auto",fontSize:11,color:"#94a3b8",flexShrink:0,whiteSpace:"nowrap"}}>← 左右滑動查看所有日期</span>}
             </div>
-            <div style={{overflowX:"auto",overflowY:"hidden",padding:"10px 10px 24px",background:"white"}}>
+            <div style={{overflowX:"auto",overflowY:isLandscape?"auto":"hidden",padding:isLandscape?"6px 10px 10px":"10px 10px 24px",background:"white",maxHeight:isLandscape?"calc(100vh - 80px)":"none"}}>
               {ganttBigProjects.length===0
                 ?<div style={{textAlign:"center",color:"#94a3b8",fontSize:13,padding:"40px 0"}}>目前沒有符合此檢視的工程項目</div>
                 :ganttMonthsEl}
