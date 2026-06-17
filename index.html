@@ -1181,9 +1181,9 @@ function doPost(e){
                   {label}
                 </button>
               ))}
-              {isLandscape&&<span style={{marginLeft:"auto",fontSize:11,color:"#94a3b8",flexShrink:0,whiteSpace:"nowrap"}}>← 左右滑動查看所有日期</span>}
+              
             </div>
-            <div style={{overflowX:"auto",overflowY:"auto",padding:isLandscape?"4px 10px 6px":"10px 10px 24px",background:"white",height:isLandscape?"calc(100dvh - 110px)":"auto",overscrollBehavior:"contain",touchAction:"pan-x pan-y",WebkitOverflowScrolling:"touch"}}>
+            <div style={{overflowX:"hidden",overflowY:"auto",padding:isLandscape?"4px 10px 6px":"10px 10px 24px",background:"white",height:isLandscape?"calc(100dvh - 110px)":"auto",overscrollBehavior:"contain",touchAction:"pan-x pan-y",WebkitOverflowScrolling:"touch"}}>
               {expandedBpId&&(<div style={{background:"#eff6ff",padding:"5px 12px",display:"flex",alignItems:"center",gap:8,fontSize:11,borderBottom:"1px solid #bfdbfe"}}><span style={{flex:1,color:"#1d4ed8",fontWeight:700}}>🔍 {bigProjects.find(bp=>bp.id===expandedBpId)?.name}</span><button onClick={()=>setExpandedBpId(null)} style={{background:"none",border:"1px solid #93c5fd",color:"#1d4ed8",borderRadius:4,cursor:"pointer",fontSize:10,padding:"2px 8px"}}>✕ 全部</button></div>)}{ganttBigProjects.length===0
                 ?<div style={{textAlign:"center",color:"#94a3b8",fontSize:13,padding:"40px 0"}}>目前沒有符合此檢視的工程項目</div>
                 :ganttMonthsEl}
@@ -1205,8 +1205,8 @@ function doPost(e){
           </div>
           {/* 全部模式加區隔標籤 */}
           {mobileListView==="all"&&(()=>{
-            const projectBps=bigProjects.filter(bp=>!bp.isDailya);
-            const dailyBps=bigProjects.filter(bp=>bp.isDailya);
+            const projectBps=bigProjects.filter(bp=>!bp.isDaily);
+            const dailyBps=bigProjects.filter(bp=>bp.isDaily);
             const hasBoth=projectBps.length>0&&dailyBps.length>0;
             const renderCard=({bp,idx:bpIdx,visTasks})=>{
               const bpColor=COLORS[bpIdx%COLORS.length];
@@ -1218,6 +1218,7 @@ function doPost(e){
               const remBN=totalBN-usedBN;
               return(
                 <div key={bp.id} style={{background:"white",borderRadius:10,marginBottom:12,border:`1px solid ${bpColor}33`,overflow:"hidden",boxShadow:"0 1px 6px rgba(0,0,0,.07)"}}>
+                  {!bp.isDaily&&(
                   <div style={{background:bpColor+"10",borderBottom:`1px solid ${bpColor}22`,padding:"12px 14px"}}>
                     <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
                       <span style={{color:bpColor,fontSize:19,fontWeight:900,lineHeight:1,flexShrink:0}}>▌</span>
@@ -1261,7 +1262,8 @@ function doPost(e){
                       <span style={{fontSize:11,color:"#94a3b8"}}>{done}/{total} 完成</span>
                     </div>
                   </div>
-                  {isExp&&(
+                  )}
+                  {(isExp||bp.isDaily)&&(
                     <div>
                       {visTasks.map(t=>{
                         const st=calcStatus(t),ss=S_STYLE[st];
