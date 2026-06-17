@@ -859,7 +859,7 @@ function doPost(e){
       .pdf-table-title{font-size:14px;font-weight:800;color:#1e293b;margin-bottom:6px;}
       table.pdf-main{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px;}
       table.pdf-main th{background:#f1f5f9;color:#475569;text-align:left;padding:6px 10px;font-weight:700;border:1px solid #e2e8f0;white-space:nowrap;}
-      table.pdf-main td{padding:6px 10px;border:1px solid #f1f5f9;vertical-align:top;}
+      table.pdf-main td{padding:6px 10px;border:1px solid #f1f5f9;vertical-align:tohp;}
       table.pdf-main tr.bp-row td{background:#eff6ff;font-weight:800;color:#1d4ed8;}
       .status-pill{display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap;}
       .st-done{background:#f0fdf4;color:#16a34a;border:1px solid #86efac;}
@@ -987,7 +987,7 @@ function doPost(e){
       document.body.removeChild(container);setExporting(false);
     }).catch(()=>{document.body.removeChild(container);setExporting(false);});
   };
-  const ganttBigProjects=ganttView==="daily"?bigProjects.filter(bp=>bp.isDaily):ganttView==="project"?bigProjects.filter(bp=>!bp.isDaily):bigProjects;
+  const ganttBigProjectsBase=ganttView==="daily"?bigProjects.filter(bp=>bp.isDaily):ganttView==="project"?bigProjects.filter(bp=>!bp.isDaily):bigProjects;const ganttBigProjects=expandedBpId?ganttBigProjectsBase.filter(bp=>bp.id===expandedBpId):ganttBigProjectsBase;
   const desktopGanttBigProjects=leftPanelView==="daily"?bigProjects.filter(bp=>bp.isDaily):leftPanelView==="project"?bigProjects.filter(bp=>!bp.isDaily):bigProjects;
   const buildGanttMonths=(filterBps,colLabel)=>months.map((m,mi)=>{
     const days=mDays[mi];
@@ -1184,8 +1184,8 @@ function doPost(e){
               ))}
               {isLandscape&&<span style={{marginLeft:"auto",fontSize:11,color:"#94a3b8",flexShrink:0,whiteSpace:"nowrap"}}>← 左右滑動查看所有日期</span>}
             </div>
-            <div style={{overflowX:"auto",overflowY:"auto",padding:isLandscape?"4px 10px 6px":"10px 10px 24px",background:"white",height:isLandscape?"calc(100vh - 100px)":"auto",overscrollBehavior:isLandscape?"contain":"auto",touchAction:isLandscape?"pan-x pan-y":"auto"}}>
-              {ganttBigProjects.length===0
+            <div style={{overflowX:"auto",overflowY:"auto",padding:isLandscape?"4px 10px 6px":"10px 10px 24px",background:"white",height:isLandscape?"calc(100dvh - 110px)":"auto",overscrollBehavior:"contain",touchAction:"pan-x pan-y",WebkitOverflowScrolling:"touch"}}>
+              {expandedBpId&&(<div style={{background:"#eff6ff",padding:"5px 12px",display:"flex",alignItems:"center",gap:8,fontSize:11,borderBottom:"1px solid #bfdbfe"}}><span style={{flex:1,color:"#1d4ed8",fontWeight:700}}>🔍 {bigProjects.find(bp=>bp.id===expandedBpId)?.name}</span><button onClick={()=>setExpandedBpId(null)} style={{background:"none",border:"1px solid #93c5fd",color:"#1d4ed8",borderRadius:4,cursor:"pointer",fontSize:10,padding:"2px 8px"}}>✕ 全部</button></div>)}{ganttBigProjects.length===0
                 ?<div style={{textAlign:"center",color:"#94a3b8",fontSize:13,padding:"40px 0"}}>目前沒有符合此檢視的工程項目</div>
                 :ganttMonthsEl}
             </div>
@@ -1206,8 +1206,8 @@ function doPost(e){
           </div>
           {/* 全部模式加區隔標籤 */}
           {mobileListView==="all"&&(()=>{
-            const projectBps=bigProjects.filter(bp=>!bp.isDaily&&bp.tasks.length>0);
-            const dailyBps=bigProjects.filter(bp=>bp.isDaily&&bp.tasks.length>0);
+            const projectBps=bigProjects.filter(bp=>!bp.isDailya);
+            const dailyBps=bigProjects.filter(bp=>bp.isDailya);
             const hasBoth=projectBps.length>0&&dailyBps.length>0;
             const renderCard=({bp,idx:bpIdx,visTasks})=>{
               const bpColor=COLORS[bpIdx%COLORS.length];
