@@ -9,7 +9,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }h
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }hh
     html, body, #root { height: 100%; }
     body { font-family: system-ui, -apple-system, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif; background: #f8fafc; overflow: hidden; font-weight: 500; }
     @media (max-width: 767px) {
@@ -475,7 +475,7 @@ function App(){
   };
   const setDetailField=(tid,key,val)=>updTask(tid,t=>{
     const nd={...(t.detail||{}),[key]:val};
-    if(key==="actualCost"&&!String(val).replace(/[^0-9]/g,"")){const st=JSON.parse(JSON.stringify(t.steps));st.contactDeposit.percent="";return{...t,detail:nd,steps:st};}
+    if(key==="actualCost"){const st=JSON.parse(JSON.stringify(t.steps));const actN=Number(String(val).replace(/[^0-9]/g,""));if(!actN){st.contactDeposit.percent="";st.contactDeposit.amount="";}else if(st.contactDeposit.percent&&!(st.contactDeposit.amount||"").startsWith("=")){st.contactDeposit.amount=fmtN(Math.round(actN*Number(st.contactDeposit.percent)/100));}return{...t,detail:nd,steps:st};}
     return{...t,detail:nd};
   });
   const setStepField=(tid,path,val)=>updTask(tid,t=>{
