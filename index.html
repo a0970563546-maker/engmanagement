@@ -717,8 +717,6 @@ function doPost(e){
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
           <button onClick={()=>{setShowExportTypeModal(false);exportSummaryPDF("project");}}
             style={{background:"#1d4ed8",border:"none",color:"white",borderRadius:6,padding:"9px 16px",fontSize:13,fontWeight:700,cursor:"pointer"}}>🏗️ 專案報表</button>
-          <button onClick={()=>{setShowExportTypeModal(false);exportSummaryPDF("daily");}}
-            style={{background:"#7c3aed",border:"none",color:"white",borderRadius:6,padding:"9px 16px",fontSize:13,fontWeight:700,cursor:"pointer"}}>📅 Daily 報表</button>
           <button onClick={()=>{setShowExportTypeModal(false);exportSummaryPDF("all");}}
             style={{background:"#0d9488",border:"none",color:"white",borderRadius:6,padding:"9px 16px",fontSize:13,fontWeight:700,cursor:"pointer"}}>🔗 全部報表</button>
           <button onClick={()=>setShowExportTypeModal(false)}
@@ -1653,7 +1651,7 @@ function doPost(e){
           </div>
           {SYNC_LABEL[syncStatus]&&<div style={{flexShrink:0,background:"#1e293b",color:"white",fontSize:11,textAlign:"center",padding:"3px"}}>{SYNC_LABEL[syncStatus]}</div>}
           <div style={{display:"flex",gap:6,alignItems:"center",padding:"6px 10px",background:"#f8fafc",borderBottom:"1px solid #e2e8f0",flexShrink:0}}>
-            {[["all","🔗 全部"],["project","🏗️ 專案"],["daily","📅 Daily"]].map(([key,label])=>(
+            {[["all","🔗 全部"],["project","🏗️ 專案"]].map(([key,label])=>(
               <button key={key} onClick={()=>setLeftPanelView(key)}
                 style={{flex:1,background:leftPanelView===key?"#1d4ed8":"white",color:leftPanelView===key?"white":"#475569",border:"1px solid "+(leftPanelView===key?"#1d4ed8":"#cbd5e1"),borderRadius:5,padding:"4px 6px",fontSize:11,fontWeight:700,cursor:"pointer"}}>
                 {label}
@@ -1698,7 +1696,7 @@ function doPost(e){
           </div>
           <div style={{display:"flex",gap:6,alignItems:"center",padding:"8px 16px",background:"#f8fafc",borderBottom:"1px solid #e2e8f0",flexShrink:0}}>
             <span style={{fontSize:11,color:"#94a3b8",fontWeight:700}}>檢視：</span>
-            {[["all","🔗 全部"],["project","🏗️ 專案"],["daily","📅 Daily"]].map(([key,label])=>(
+            {[["all","🔗 全部"],["project","🏗️ 專案"]].map(([key,label])=>(
               <button key={key} onClick={()=>setLeftPanelView(key)}
                 style={{background:leftPanelView===key?"#1d4ed8":"white",color:leftPanelView===key?"white":"#475569",border:"1px solid "+(leftPanelView===key?"#1d4ed8":"#cbd5e1"),borderRadius:5,padding:"4px 12px",fontSize:12,fontWeight:700,cursor:"pointer"}}>
                 {label}
