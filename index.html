@@ -43,6 +43,8 @@ const { useState, useMemo, useEffect } = React;
 const DAY_PX=22, LABEL_W=148, BP_H=28;
 const COLORS=["#2563eb","#0d9488","#b45309","#7c3aed","#0e7490","#be185d","#dc2626","#4d7c0f"];
 const WEEKDAY="日一二三四五六";
+// 專案 → 排程甘特圖連結（新專案有甘特圖頁時在這裡加一行）
+const GANTT_LINKS={"台東車站商場改造案":"https://a0970563546-maker.github.io/taitung-gantt/"};
 const S_STYLE={
   "待執行":{bg:"#f1f5f9",color:"#64748b",border:"#cbd5e1"},
   "執行中":{bg:"#eff6ff",color:"#2563eb",border:"#93c5fd"},
@@ -1520,6 +1522,7 @@ function doPost(e){
                 {bp.name}
               </span>
           }
+          {GANTT_LINKS[bp.name]&&<a href={GANTT_LINKS[bp.name]} target="_blank" rel="noopener" title="開啟排程甘特圖" onClick={e=>e.stopPropagation()} style={{flexShrink:0,fontSize:10,fontWeight:700,color:"#2E5B8F",background:"#E8EEF5",border:"1px solid #C7D5E4",borderRadius:5,padding:"2px 6px",textDecoration:"none",whiteSpace:"nowrap"}}>📅 排程</a>}
           <span style={{fontSize:10,color:bpColor+"99",whiteSpace:"nowrap",flexShrink:0}}>{done}/{bp.tasks.length}</span>
           {active>0&&<span style={{fontSize:10,color:"#2563eb",background:"#eff6ff",padding:"1px 5px",borderRadius:6,fontWeight:700,flexShrink:0,whiteSpace:"nowrap"}}>{active}執行</span>}
           {over&&<span style={{fontSize:10,color:"#ef4444",background:"#fff1f2",padding:"1px 5px",borderRadius:6,fontWeight:700,flexShrink:0}}>⚠超</span>}
