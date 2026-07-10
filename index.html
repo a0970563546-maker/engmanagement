@@ -28,6 +28,15 @@
   </style>
 </head>
 <body>
+<!-- ▼ 統一導覽列（三系統共用）▼ -->
+<nav id="uniNav" style="background:#2E5B8F;display:flex;gap:2px;align-items:center;padding:0 10px;overflow-x:auto;font-family:'Microsoft JhengHei','PingFang TC',sans-serif">
+<span style="color:#9FB6CE;font-weight:700;font-size:12.5px;padding:11px 8px;white-space:nowrap">🔗 工作平台</span>
+<a href="https://a0970563546-maker.github.io/engmanagement/" style="color:#FFFFFF;text-decoration:none;font-size:13.5px;font-weight:800;padding:11px 10px;white-space:nowrap;border-bottom:3px solid #E8C87E">🏗️ 工程管理</a>
+<a href="https://a0970563546-maker.github.io/todo/" style="color:#C7D5E4;text-decoration:none;font-size:13.5px;font-weight:600;padding:11px 10px;white-space:nowrap;border-bottom:3px solid transparent">📋 待辦追蹤</a>
+<a href="https://a0970563546-maker.github.io/taitung-gantt/" style="color:#C7D5E4;text-decoration:none;font-size:13.5px;font-weight:600;padding:11px 10px;white-space:nowrap;border-bottom:3px solid transparent">📅 排程甘特圖</a>
+</nav>
+<!-- ▲ 統一導覽列 ▲ -->
+
 <div id="root"></div>
 <script type="text/babel">
 const { useState, useMemo, useEffect } = React;
@@ -693,8 +702,6 @@ function doPost(e){
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
           <button onClick={()=>{addBigProject(false);setShowAddTypeModal(false);}}
             style={{background:"#1d4ed8",border:"none",color:"white",borderRadius:6,padding:"9px 16px",fontSize:13,fontWeight:700,cursor:"pointer"}}>🏗️ 專案</button>
-          <button onClick={()=>{addBigProject(true);setShowAddTypeModal(false);}}
-            style={{background:"#0d9488",border:"none",color:"white",borderRadius:6,padding:"9px 16px",fontSize:13,fontWeight:700,cursor:"pointer"}}>📅 Daily</button>
           <button onClick={()=>setShowAddTypeModal(false)}
             style={{background:"#f1f5f9",border:"1px solid #e2e8f0",color:"#64748b",borderRadius:6,padding:"7px 16px",fontSize:12,fontWeight:700,cursor:"pointer"}}>取消</button>
         </div>
@@ -1179,7 +1186,7 @@ function doPost(e){
               </div>
             )}
             <div style={{display:"flex",gap:6,alignItems:"center",marginTop:isLandscape?"20px":"0",padding:isLandscape?"5px 10px":"8px 10px",background:"#f8fafc",borderBottom:"1px solid #e2e8f0",overflowX:"auto"}}>
-              {[["all","🔗 全部"],["project","🏗️ 專案"],["daily","📅 Daily"]].map(([key,label])=>(
+              {[["all","🔗 全部"],["project","🏗️ 專案"]].map(([key,label])=>(
                 <button key={key} onClick={()=>setGanttView(key)}
                   style={{flexShrink:0,background:ganttView===key?"#1d4ed8":"white",color:ganttView===key?"white":"#475569",border:"1px solid "+(ganttView===key?"#1d4ed8":"#cbd5e1"),borderRadius:5,padding:isLandscape?"3px 10px":"4px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>
                   {label}
@@ -1198,7 +1205,7 @@ function doPost(e){
         <div>
           {/* 列表檢視切換 */}
           <div style={{display:"flex",gap:6,padding:"10px 12px 0",background:"#f8fafc"}}>
-            {[["all","全部","🔗"],["project","專案","🏗️"],["daily","Daily","📅"]].map(([v,l,icon])=>(
+            {[["all","全部","🔗"],["project","專案","🏗️"]].map(([v,l,icon])=>(
               <button key={v} onClick={()=>setMobileListView(v)}
                 style={{flex:1,padding:"6px 4px",borderRadius:8,border:"none",cursor:"pointer",fontSize:12,fontWeight:700,
                   background:mobileListView===v?"#1e293b":"#e2e8f0",
