@@ -507,6 +507,7 @@ function App(){
   const[ganttView,setGanttView]=useState("all"); // "daily" | "project" | "all"
   const[mobileListView,setMobileListView]=useState("all"); // "daily" | "project" | "all"
   const[leftPanelView,setLeftPanelView]=useState("all"); // "daily" | "project" | "all"
+  const bpVisible=bp=>showArchived?!!bp.archived:(leftPanelView==="all"?true:!bp.archived);
   const[showAddTypeModal,setShowAddTypeModal]=useState(false);
   const[showExportTypeModal,setShowExportTypeModal]=useState(false);
   const[summaryPreview,setSummaryPreview]=useState(null); // {html,fname,filterType}
@@ -1061,8 +1062,8 @@ function doPost(e){
       document.body.removeChild(container);setExporting(false);
     }).catch(()=>{document.body.removeChild(container);setExporting(false);});
   };
-  const ganttBigProjectsBase=ganttView==="daily"?bigProjects.filter(bp=>bp.isDaily&&!bp.archived):ganttView==="project"?bigProjects.filter(bp=>!bp.isDaily&&!bp.archived):bigProjects;const ganttBigProjects=expandedBpId?ganttBigProjectsBase.filter(bp=>bp.id===expandedBpId):ganttBigProjectsBase;
-  const desktopGanttBigProjects=leftPanelView==="daily"?bigProjects.filter(bp=>bp.isDaily&&!bp.archived):leftPanelView==="project"?bigProjects.filter(bp=>!bp.isDaily&&!bp.archived):bigProjects;
+  const ganttBigProjectsBase=(ganttView==="daily"?bigProjects.filter(bp=>bp.isDaily):ganttView==="project"?bigProjects.filter(bp=>!bp.isDaily):bigProjects).filter(bp=>bpVisible(bp));const ganttBigProjects=expandedBpId?ganttBigProjectsBase.filter(bp=>bp.id===expandedBpId):ganttBigProjectsBase;
+  const desktopGanttBigProjects=bigProjects.filter(bp=>!bp.isDaily&&bpVisible(bp));
   const buildGanttMonths=(filterBps,colLabel)=>months.map((m,mi)=>{
     const days=mDays[mi];
     const isCurM=todayDate.getFullYear()===m.getFullYear()&&todayDate.getMonth()===m.getMonth();
@@ -1685,8 +1686,8 @@ function doPost(e){
       </React.Fragment>
     );
   };
-  const dailyBps=bigProjects.map((bp,idx)=>({bp,idx})).filter(x=>x.bp.isDaily).filter(x=>showArchived?!!x.bp.archived:!x.bp.archived);
-  const projectBps=bigProjects.map((bp,idx)=>({bp,idx})).filter(x=>!x.bp.isDaily).filter(x=>showArchived?!!x.bp.archived:!x.bp.archived);
+  const dailyBps=bigProjects.map((bp,idx)=>({bp,idx})).filter(x=>x.bp.isDaily).filter(x=>bpVisible(x.bp));
+  const projectBps=bigProjects.map((bp,idx)=>({bp,idx})).filter(x=>!x.bp.isDaily).filter(x=>bpVisible(x.bp));
   // ===== DESKTOP =====
   return(
     <div style={{display:"flex",flexDirection:"column",height:"100vh",fontSize:14,overflow:"hidden"}} onClick={()=>setHolidayTip(null)}>
@@ -1724,7 +1725,7 @@ function doPost(e){
           {SYNC_LABEL[syncStatus]&&<div style={{flexShrink:0,background:"#1e293b",color:"white",fontSize:11,textAlign:"center",padding:"3px"}}>{SYNC_LABEL[syncStatus]}</div>}
           <div style={{display:"flex",gap:6,alignItems:"center",padding:"6px 10px",background:"#f8fafc",borderBottom:"1px solid #e2e8f0",flexShrink:0}}>
             {[["all","🔗 全部"],["project","🏗️ 專案"]].map(([key,label])=>(
-              <button key={key} onClick={()=>setLeftPanelView(key)}
+              <button key={key} onClick={()=>{setLeftPanelView(key);setGanttView(key);}}
                 style={{flex:1,background:leftPanelView===key?"#1d4ed8":"white",color:leftPanelView===key?"white":"#475569",border:"1px solid "+(leftPanelView===key?"#1d4ed8":"#cbd5e1"),borderRadius:5,padding:"4px 6px",fontSize:11,fontWeight:700,cursor:"pointer"}}>
                 {label}
               </button>
@@ -1770,7 +1771,7 @@ function doPost(e){
           <div style={{display:"flex",gap:6,alignItems:"center",padding:"8px 16px",background:"#f8fafc",borderBottom:"1px solid #e2e8f0",flexShrink:0}}>
             <span style={{fontSize:11,color:"#94a3b8",fontWeight:700}}>檢視：</span>
             {[["all","🔗 全部"],["project","🏗️ 專案"]].map(([key,label])=>(
-              <button key={key} onClick={()=>setLeftPanelView(key)}
+              <button key={key} onClick={()=>{setLeftPanelView(key);setGanttView(key);}}
                 style={{background:leftPanelView===key?"#1d4ed8":"white",color:leftPanelView===key?"white":"#475569",border:"1px solid "+(leftPanelView===key?"#1d4ed8":"#cbd5e1"),borderRadius:5,padding:"4px 12px",fontSize:12,fontWeight:700,cursor:"pointer"}}>
                 {label}
               </button>
