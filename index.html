@@ -503,7 +503,7 @@ function App(){
   const[mobileTab,setMobileTab]=useState("list");
   const[showArchived,setShowArchived]=useState(false);
   const[ganttBp,setGanttBp]=useState(null);
-  useEffect(()=>{const t=setTimeout(()=>{try{const el=[...document.querySelectorAll("span,div")].find(x=>x.children.length===0&&x.textContent==="本月");if(el&&el.scrollIntoView)el.scrollIntoView({block:"start"});}catch(e){}},900);return()=>clearTimeout(t);},[]);
+  useEffect(()=>{const t=setTimeout(()=>{try{const el=[...document.querySelectorAll("span,div")].find(x=>x.children.length===0&&x.textContent==="本月");if(el&&el.scrollIntoView)el.scrollIntoView({block:"start"});window.scrollTo(0,0);}catch(e){}},900);return()=>clearTimeout(t);},[]);
   const[ganttView,setGanttView]=useState("project"); // "daily" | "project" | "all"
   const[mobileListView,setMobileListView]=useState("project"); // "daily" | "project" | "all"
   const[leftPanelView,setLeftPanelView]=useState("project"); // "daily" | "project" | "all"
