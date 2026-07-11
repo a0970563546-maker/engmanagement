@@ -1251,15 +1251,7 @@ function doPost(e){
                 <span>橫放手機可看到更多日期欄位</span>
               </div>
             )}
-            <div style={{display:"flex",gap:6,alignItems:"center",marginTop:isLandscape?"20px":"0",padding:isLandscape?"5px 10px":"8px 10px",background:"#f8fafc",borderBottom:"1px solid #e2e8f0",overflowX:"auto"}}>
-              {[["project","🏗️ 專案"]].map(([key,label])=>(
-                <button key={key} onClick={()=>setGanttView(key)}
-                  style={{flexShrink:0,background:ganttView===key?"#1d4ed8":"white",color:ganttView===key?"white":"#475569",border:"1px solid "+(ganttView===key?"#1d4ed8":"#cbd5e1"),borderRadius:5,padding:isLandscape?"3px 10px":"4px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>
-                  {label}
-                </button>
-              ))}
-              
-            </div>
+            
             <div className="gantt-scroll" style={{overflowX:"scroll",overflowY:"auto",padding:isLandscape?"4px 10px 6px":"10px 10px 24px",background:"white",height:isLandscape?"calc(100dvh - 110px)":"auto",overscrollBehavior:"contain",touchAction:isLandscape?"pan-x pan-y":"auto",WebkitOverflowScrolling:"touch"}}>
               {expandedBpId&&(<div style={{background:"#eff6ff",padding:"5px 12px",display:"flex",alignItems:"center",gap:8,fontSize:11,borderBottom:"1px solid #bfdbfe"}}><span style={{flex:1,color:"#1d4ed8",fontWeight:700}}>🔍 {bigProjects.find(bp=>bp.id===expandedBpId)?.name}</span><button onClick={()=>setExpandedBpId(null)} style={{background:"none",border:"1px solid #93c5fd",color:"#1d4ed8",borderRadius:4,cursor:"pointer",fontSize:10,padding:"2px 8px"}}>✕ 全部</button></div>)}{ganttBigProjects.length===0
                 ?<div style={{textAlign:"center",color:"#94a3b8",fontSize:13,padding:"40px 0"}}>目前沒有符合此檢視的工程項目</div>
@@ -1724,12 +1716,7 @@ function doPost(e){
           </div>
           {SYNC_LABEL[syncStatus]&&<div style={{flexShrink:0,background:"#1e293b",color:"white",fontSize:11,textAlign:"center",padding:"3px"}}>{SYNC_LABEL[syncStatus]}</div>}
           <div style={{display:"flex",gap:6,alignItems:"center",padding:"6px 10px",background:"#f8fafc",borderBottom:"1px solid #e2e8f0",flexShrink:0}}>
-            {[["project","🏗️ 專案"]].map(([key,label])=>(
-              <button key={key} onClick={()=>{setLeftPanelView(key);setGanttView(key);}}
-                style={{flex:1,background:leftPanelView===key?"#1d4ed8":"white",color:leftPanelView===key?"white":"#475569",border:"1px solid "+(leftPanelView===key?"#1d4ed8":"#cbd5e1"),borderRadius:5,padding:"4px 6px",fontSize:11,fontWeight:700,cursor:"pointer"}}>
-                {label}
-              </button>
-            ))}
+            <span style={{flex:1,fontSize:11,fontWeight:800,color:showArchived?"#64748b":"#1d4ed8"}}>{showArchived?"📦 封存區":"🏗️ 進行中專案"}</span>
             <button onClick={()=>setShowArchived(v=>!v)} title="切換封存區" style={{flexShrink:0,background:showArchived?"#64748b":"white",color:showArchived?"white":"#64748b",border:"1px solid #cbd5e1",borderRadius:5,padding:"4px 8px",fontSize:11,fontWeight:700,cursor:"pointer"}}>📦{showArchived?" 封存區":""}</button>
           </div>
           <div style={{flex:1,overflowY:"auto",minHeight:0}}>
@@ -1768,15 +1755,7 @@ function doPost(e){
               </button>
             </div>
           </div>
-          <div style={{display:"flex",gap:6,alignItems:"center",padding:"8px 16px",background:"#f8fafc",borderBottom:"1px solid #e2e8f0",flexShrink:0}}>
-            <span style={{fontSize:11,color:"#94a3b8",fontWeight:700}}>檢視：</span>
-            {[["project","🏗️ 專案"]].map(([key,label])=>(
-              <button key={key} onClick={()=>{setLeftPanelView(key);setGanttView(key);}}
-                style={{background:leftPanelView===key?"#1d4ed8":"white",color:leftPanelView===key?"white":"#475569",border:"1px solid "+(leftPanelView===key?"#1d4ed8":"#cbd5e1"),borderRadius:5,padding:"4px 12px",fontSize:12,fontWeight:700,cursor:"pointer"}}>
-                {label}
-              </button>
-            ))}
-          </div>
+          
           <div style={{flex:1,overflowY:"auto",overflowX:"auto",padding:"14px 16px 24px",background:"white"}}>
             {desktopGanttBigProjects.length===0
               ?<div style={{textAlign:"center",color:"#94a3b8",fontSize:13,padding:"40px 0"}}>目前沒有符合此檢視的工程項目</div>
