@@ -1200,6 +1200,7 @@ function doPost(e){
     const drawerInfo=drawerTaskId?findInfo(drawerTaskId):null;
     return(
       <div style={{minHeight:"100vh",height:isLandscape&&mobileTab==="gantt"?"100vh":"auto",overflow:isLandscape&&mobileTab==="gantt"?"hidden":"visible",background:"#f0f4f8",paddingBottom:isLandscape?0:32}} onClick={()=>setHolidayTip(null)}>
+        {ganttBp&&<GanttModal bp={bigProjects.find(b=>b.id===ganttBp)} onClose={()=>setGanttBp(null)} onAdd={()=>openAddTask(ganttBp)}/>}
         <div style={{background:"#1d4ed8",color:"white",padding:isLandscape?"6px 12px":"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",position:"sticky",top:0,zIndex:30}}>
           <div style={{display:isLandscape?"none":"block"}}>
             <div style={{fontWeight:800,fontSize:16}}>🏗️ 工程管理系統</div>
@@ -1304,6 +1305,7 @@ function doPost(e){
                             style={{flex:1,fontSize:15,fontWeight:700,border:"none",borderBottom:`2px solid ${bpColor}`,outline:"none",background:"transparent",fontFamily:"inherit"}}/>
                         :<span onDoubleClick={()=>{setEditBpId(bp.id);setEditBpName(bp.name);}} style={{flex:1,fontSize:15,fontWeight:700,color:"#1e293b"}}>{bp.name}</span>
                       }
+                      <button onClick={e=>{e.stopPropagation();setGanttBp(bp.id);}} title="開啟排程甘特圖" style={{background:"#E8EEF5",border:"1px solid #C7D5E4",borderRadius:5,color:"#2E5B8F",fontSize:11,fontWeight:700,padding:"2px 6px",cursor:"pointer",flexShrink:0}}>📅</button>
                       <button onClick={()=>setExpandedBpId(id=>id===bp.id?null:bp.id)}
                         style={{background:"none",border:"none",cursor:"pointer",fontSize:15,color:bpColor,padding:"0 2px",flexShrink:0}}>{isExp?"▲":"▼"}</button>
                       <button onClick={()=>delBigProject(bp.id)}
@@ -1444,7 +1446,8 @@ function doPost(e){
                           style={{flex:1,fontSize:15,fontWeight:700,border:"none",borderBottom:`2px solid ${bpColor}`,outline:"none",background:"transparent",fontFamily:"inherit"}}/>
                       :<span onDoubleClick={()=>{setEditBpId(bp.id);setEditBpName(bp.name);}} style={{flex:1,fontSize:15,fontWeight:700,color:"#1e293b"}}>{bp.name}</span>
                     }
-                    <button onClick={()=>setExpandedBpId(id=>id===bp.id?null:bp.id)}
+                    <button onClick={e=>{e.stopPropagation();setGanttBp(bp.id);}} title="開啟排程甘特圖" style={{background:"#E8EEF5",border:"1px solid #C7D5E4",borderRadius:5,color:"#2E5B8F",fontSize:11,fontWeight:700,padding:"2px 6px",cursor:"pointer",flexShrink:0}}>📅</button>
+                      <button onClick={()=>setExpandedBpId(id=>id===bp.id?null:bp.id)}
                       style={{background:"none",border:"none",cursor:"pointer",fontSize:15,color:bpColor,padding:"0 2px",flexShrink:0}}>{isExp?"▲":"▼"}</button>
                     <button onClick={()=>delBigProject(bp.id)}
                       style={{background:"none",border:"none",cursor:"pointer",fontSize:15,color:"#fca5a5",padding:"0 2px",flexShrink:0}}
