@@ -504,9 +504,9 @@ function App(){
   const[showArchived,setShowArchived]=useState(false);
   const[ganttBp,setGanttBp]=useState(null);
   useEffect(()=>{const t=setTimeout(()=>{try{const el=[...document.querySelectorAll("span,div")].find(x=>x.children.length===0&&x.textContent==="本月");if(el&&el.scrollIntoView)el.scrollIntoView({block:"start"});}catch(e){}},900);return()=>clearTimeout(t);},[]);
-  const[ganttView,setGanttView]=useState("all"); // "daily" | "project" | "all"
-  const[mobileListView,setMobileListView]=useState("all"); // "daily" | "project" | "all"
-  const[leftPanelView,setLeftPanelView]=useState("all"); // "daily" | "project" | "all"
+  const[ganttView,setGanttView]=useState("project"); // "daily" | "project" | "all"
+  const[mobileListView,setMobileListView]=useState("project"); // "daily" | "project" | "all"
+  const[leftPanelView,setLeftPanelView]=useState("project"); // "daily" | "project" | "all"
   const bpVisible=bp=>showArchived?!!bp.archived:(leftPanelView==="all"?true:!bp.archived);
   const[showAddTypeModal,setShowAddTypeModal]=useState(false);
   const[showExportTypeModal,setShowExportTypeModal]=useState(false);
@@ -1252,7 +1252,7 @@ function doPost(e){
               </div>
             )}
             <div style={{display:"flex",gap:6,alignItems:"center",marginTop:isLandscape?"20px":"0",padding:isLandscape?"5px 10px":"8px 10px",background:"#f8fafc",borderBottom:"1px solid #e2e8f0",overflowX:"auto"}}>
-              {[["all","🔗 全部"],["project","🏗️ 專案"]].map(([key,label])=>(
+              {[["project","🏗️ 專案"]].map(([key,label])=>(
                 <button key={key} onClick={()=>setGanttView(key)}
                   style={{flexShrink:0,background:ganttView===key?"#1d4ed8":"white",color:ganttView===key?"white":"#475569",border:"1px solid "+(ganttView===key?"#1d4ed8":"#cbd5e1"),borderRadius:5,padding:isLandscape?"3px 10px":"4px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>
                   {label}
@@ -1271,7 +1271,7 @@ function doPost(e){
         <div>
           {/* 列表檢視切換 */}
           <div style={{display:"flex",gap:6,padding:"10px 12px 0",background:"#f8fafc"}}>
-            {[["all","全部","🔗"],["project","專案","🏗️"]].map(([v,l,icon])=>(
+            {[["project","專案","🏗️"]].map(([v,l,icon])=>(
               <button key={v} onClick={()=>setMobileListView(v)}
                 style={{flex:1,padding:"6px 4px",borderRadius:8,border:"none",cursor:"pointer",fontSize:12,fontWeight:700,
                   background:mobileListView===v?"#1e293b":"#e2e8f0",
@@ -1724,7 +1724,7 @@ function doPost(e){
           </div>
           {SYNC_LABEL[syncStatus]&&<div style={{flexShrink:0,background:"#1e293b",color:"white",fontSize:11,textAlign:"center",padding:"3px"}}>{SYNC_LABEL[syncStatus]}</div>}
           <div style={{display:"flex",gap:6,alignItems:"center",padding:"6px 10px",background:"#f8fafc",borderBottom:"1px solid #e2e8f0",flexShrink:0}}>
-            {[["all","🔗 全部"],["project","🏗️ 專案"]].map(([key,label])=>(
+            {[["project","🏗️ 專案"]].map(([key,label])=>(
               <button key={key} onClick={()=>{setLeftPanelView(key);setGanttView(key);}}
                 style={{flex:1,background:leftPanelView===key?"#1d4ed8":"white",color:leftPanelView===key?"white":"#475569",border:"1px solid "+(leftPanelView===key?"#1d4ed8":"#cbd5e1"),borderRadius:5,padding:"4px 6px",fontSize:11,fontWeight:700,cursor:"pointer"}}>
                 {label}
@@ -1770,7 +1770,7 @@ function doPost(e){
           </div>
           <div style={{display:"flex",gap:6,alignItems:"center",padding:"8px 16px",background:"#f8fafc",borderBottom:"1px solid #e2e8f0",flexShrink:0}}>
             <span style={{fontSize:11,color:"#94a3b8",fontWeight:700}}>檢視：</span>
-            {[["all","🔗 全部"],["project","🏗️ 專案"]].map(([key,label])=>(
+            {[["project","🏗️ 專案"]].map(([key,label])=>(
               <button key={key} onClick={()=>{setLeftPanelView(key);setGanttView(key);}}
                 style={{background:leftPanelView===key?"#1d4ed8":"white",color:leftPanelView===key?"white":"#475569",border:"1px solid "+(leftPanelView===key?"#1d4ed8":"#cbd5e1"),borderRadius:5,padding:"4px 12px",fontSize:12,fontWeight:700,cursor:"pointer"}}>
                 {label}
