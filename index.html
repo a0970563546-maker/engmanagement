@@ -28,13 +28,22 @@
   </style>
 </head>
 <body>
-<!-- ▼ 統一導覽列（三系統共用）▼ -->
+<!-- ▼ 統一導覽列（工作平台分頁）▼ -->
 <nav id="uniNav" style="background:#2E5B8F;display:flex;gap:2px;align-items:center;padding:0 10px;overflow-x:auto;font-family:'Microsoft JhengHei','PingFang TC',sans-serif">
 <span style="color:#9FB6CE;font-weight:700;font-size:12.5px;padding:11px 8px;white-space:nowrap">🔗 工作平台</span>
-<a href="https://a0970563546-maker.github.io/engmanagement/" style="color:#FFFFFF;text-decoration:none;font-size:13.5px;font-weight:800;padding:11px 10px;white-space:nowrap;border-bottom:3px solid #E8C87E">🏗️ 工程管理</a>
-<a href="https://a0970563546-maker.github.io/todo/" style="color:#C7D5E4;text-decoration:none;font-size:13.5px;font-weight:600;padding:11px 10px;white-space:nowrap;border-bottom:3px solid transparent">📋 待辦追蹤</a>
-<a href="https://a0970563546-maker.github.io/taitung-gantt/" style="color:#C7D5E4;text-decoration:none;font-size:13.5px;font-weight:600;padding:11px 10px;white-space:nowrap;border-bottom:3px solid transparent">📅 排程甘特圖</a>
+<a href="#" id="tabEng" onclick="swTab('eng');return false" style="color:#FFFFFF;text-decoration:none;font-size:13.5px;font-weight:800;padding:11px 10px;white-space:nowrap;border-bottom:3px solid #E8C87E">🏗️ 工程管理</a>
+<a href="#" id="tabTodo" onclick="swTab('todo');return false" style="color:#C7D5E4;text-decoration:none;font-size:13.5px;font-weight:600;padding:11px 10px;white-space:nowrap;border-bottom:3px solid transparent">📋 待辦追蹤</a>
+<a href="https://a0970563546-maker.github.io/taitung-gantt/" target="_blank" rel="noopener" style="color:#C7D5E4;text-decoration:none;font-size:13.5px;font-weight:600;padding:11px 10px;white-space:nowrap;border-bottom:3px solid transparent">🔗 對外分享頁 ↗</a>
 </nav>
+<div id="todoWrap" style="display:none;height:calc(100vh - 42px)"><iframe id="todoFrame" style="width:100%;height:100%;border:0" title="待辦事項追蹤系統"></iframe></div>
+<script>
+function swTab(t){var eng=document.getElementById('root'),tw=document.getElementById('todoWrap'),f=document.getElementById('todoFrame');
+if(t==='todo'&&!f.src)f.src='https://a0970563546-maker.github.io/todo/';
+eng.style.display=(t==='eng')?'':'none';tw.style.display=(t==='todo')?'block':'none';
+var A='color:#FFFFFF;text-decoration:none;font-size:13.5px;font-weight:800;padding:11px 10px;white-space:nowrap;border-bottom:3px solid #E8C87E',I='color:#C7D5E4;text-decoration:none;font-size:13.5px;font-weight:600;padding:11px 10px;white-space:nowrap;border-bottom:3px solid transparent';
+document.getElementById('tabEng').style.cssText=(t==='eng')?A:I;
+document.getElementById('tabTodo').style.cssText=(t==='todo')?A:I;}
+</script>
 <!-- ▲ 統一導覽列 ▲ -->
 
 <div id="root"></div>
@@ -314,6 +323,58 @@ function DrawerPanel({taskInfo,drawerTab,setDrawerTab,setDrawerTaskId,setDetailF
     </div>
   );
 }
+const GHOLS={"2026-01-01":"元旦","2026-02-14":"春節連假","2026-02-15":"春節連假","2026-02-16":"除夕","2026-02-17":"春節","2026-02-18":"春節","2026-02-19":"春節","2026-02-20":"春節連假","2026-02-21":"春節連假","2026-02-22":"春節連假","2026-02-27":"228補假","2026-02-28":"和平紀念日","2026-04-03":"兒童節補假","2026-04-04":"兒童節","2026-04-05":"清明節","2026-04-06":"清明補假","2026-05-01":"勞動節","2026-06-19":"端午節","2026-09-25":"中秋節","2026-09-28":"教師節","2026-10-09":"國慶補假","2026-10-10":"國慶日","2026-10-25":"光復節","2026-10-26":"光復節補假","2026-12-25":"行憲紀念日","2027-01-01":"元旦"};
+const gIso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const gPd=s=>{s=(s||"").replace(/-/g,"/");const p=s.split("/").map(Number);if(p.length!==3||p.some(isNaN))return null;return new Date(p[0],p[1]-1,p[2]);};
+const gOff=d=>{const w=(d.getDay()+6)%7;return w>=5||GHOLS[gIso(d)]!==undefined;};
+const gWd=(s,e)=>{let n=0;const d=new Date(s);while(d<=e){if(!gOff(d))n++;d.setDate(d.getDate()+1);}return n;};
+const gEsc=t=>String(t).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+function buildGanttHTML(bp){
+  const tasks=(bp.tasks||[]).map(t=>({name:t.name,done:t.done,s:gPd(t.startDate),e:gPd(t.endDate)})).filter(t=>t.s&&t.e&&t.e>=t.s).sort((a,b)=>a.s-b.s);
+  if(!tasks.length) return '<p style="color:#9A948C;font-style:italic">此專案還沒有任務。按上方「＋ 新增排程項目」開始安排。</p>';
+  const C_ON="#92A8BD",C_DONE="#9CAF88",WKND="#EDEAE5",INV="#B3A493",GRID="#D8D4CE",TXT="#4A5158",WD="一二三四五六日";
+  const minD=new Date(Math.min(...tasks.map(t=>t.s))),maxD=new Date(Math.max(...tasks.map(t=>t.e)));
+  const multi=minD.getFullYear()!==maxD.getFullYear();
+  let out='<div style="display:flex;gap:16px;font-size:12.5px;margin:4px 0 8px;color:'+TXT+'"><span><span style="display:inline-block;width:12px;height:12px;background:'+C_ON+';border-radius:3px"></span> 進行中</span><span><span style="display:inline-block;width:12px;height:12px;background:'+C_DONE+';border-radius:3px"></span> 已完成</span><span><span style="display:inline-block;width:12px;height:12px;background:'+INV+';border-radius:3px"></span> 週末／國定假日</span></div>';
+  const cur=new Date(minD.getFullYear(),minD.getMonth(),1);
+  while(cur<=maxD){
+    const y=cur.getFullYear(),m=cur.getMonth(),nd=new Date(y,m+1,0).getDate();
+    const ms=new Date(y,m,1),me=new Date(y,m,nd);
+    const mt=tasks.filter(t=>t.s<=me&&t.e>=ms);
+    if(mt.length){
+      out+='<div style="background:#8A9BA8;color:#fff;font-weight:700;padding:5px 12px;border-radius:4px 4px 0 0;margin-top:16px;font-size:14px">'+(multi?y+"年 ":"")+(m+1)+'月</div><div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;background:#fff;font-size:12px"><tr>';
+      const th='style="border:1px solid '+GRID+';padding:2px 6px;background:#EDEAE5;font-weight:600;color:'+TXT+'"';
+      out+='<th '+th+'>任務</th><th '+th+'>開始</th><th '+th+'>結束</th><th '+th+'>天數</th>';
+      for(let d=1;d<=nd;d++){const dt=new Date(y,m,d),ofl=gOff(dt),hol=GHOLS[gIso(dt)];
+        out+='<th style="border:1px solid '+GRID+';min-width:20px;font-size:10.5px;line-height:1.15;padding:2px 1px;'+(ofl?'background:'+INV+';color:#fff':'background:#EDEAE5;color:'+TXT)+'"'+(hol?' title="'+hol+'"':'')+'>'+d+'<br><span style="font-size:9.5px;color:'+(ofl?'#fff':'#8A9098')+'">'+WD[(dt.getDay()+6)%7]+'</span></th>';}
+      out+='</tr>';
+      mt.forEach(t=>{
+        const col=t.done?C_DONE:C_ON;
+        out+='<tr><td style="border:1px solid '+GRID+';padding:2px 8px;text-align:left;white-space:nowrap;color:'+TXT+(t.done?';text-decoration:line-through;opacity:.7':'')+'">'+gEsc(t.name)+'</td><td style="border:1px solid '+GRID+';padding:2px 6px;color:#3E6A8E;white-space:nowrap">'+(t.s.getMonth()+1)+'/'+t.s.getDate()+'</td><td style="border:1px solid '+GRID+';padding:2px 6px;color:#3E6A8E;white-space:nowrap">'+(t.e.getMonth()+1)+'/'+t.e.getDate()+'</td><td style="border:1px solid '+GRID+';padding:2px 6px;color:'+TXT+'">'+gWd(t.s,t.e)+'</td>';
+        for(let d=1;d<=nd;d++){const dt=new Date(y,m,d);let bg='';
+          if(t.s<=dt&&dt<=t.e&&!gOff(dt))bg='background:'+col;else if(gOff(dt))bg='background:'+WKND;
+          out+='<td style="border:1px solid '+GRID+';height:22px;'+bg+'"></td>';}
+        out+='</tr>';});
+      out+='</table></div>';
+    }
+    cur.setMonth(cur.getMonth()+1);
+  }
+  out+='<p style="font-size:11.5px;color:#9A948C;font-style:italic;margin-top:10px">※ 天數＝工作日（扣除週六日與國定假日）。改任務日期或勾完成後重開此窗即更新。</p>';
+  return out;
+}
+function GanttModal({bp,onClose,onAdd}){
+  if(!bp) return null;
+  return(<div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(15,23,42,.55)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:14}}>
+    <div onClick={e=>e.stopPropagation()} style={{background:"#FAF9F7",borderRadius:12,width:"min(1150px,96vw)",maxHeight:"92vh",display:"flex",flexDirection:"column",overflow:"hidden"}}>
+      <div style={{background:"#2E5B8F",color:"#fff",padding:"10px 16px",display:"flex",alignItems:"center",gap:10}}>
+        <span style={{fontWeight:800,fontSize:15,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>📅 {bp.name}｜排程甘特圖</span>
+        <button onClick={onAdd} style={{background:"#E8C87E",border:"none",color:"#4A3B18",borderRadius:6,padding:"6px 12px",fontSize:12.5,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>＋ 新增排程項目</button>
+        <button onClick={onClose} style={{background:"rgba(255,255,255,.15)",border:"none",color:"#fff",borderRadius:6,padding:"6px 12px",fontSize:12.5,fontWeight:700,cursor:"pointer"}}>關閉 ✕</button>
+      </div>
+      <div style={{overflow:"auto",padding:"10px 16px 16px"}} dangerouslySetInnerHTML={{__html:buildGanttHTML(bp)}}/>
+    </div>
+  </div>);
+}
 function App(){
   const STORAGE_KEY="engMgmtProData";
   const defaultProjects=()=>[
@@ -441,6 +502,8 @@ function App(){
   const[editDateId,setEditDateId]=useState(null);
   const[mobileTab,setMobileTab]=useState("list");
   const[showArchived,setShowArchived]=useState(false);
+  const[ganttBp,setGanttBp]=useState(null);
+  useEffect(()=>{const t=setTimeout(()=>{try{const el=[...document.querySelectorAll("span,div")].find(x=>x.children.length===0&&x.textContent==="本月");if(el&&el.scrollIntoView)el.scrollIntoView({block:"start"});}catch(e){}},900);return()=>clearTimeout(t);},[]);
   const[ganttView,setGanttView]=useState("all"); // "daily" | "project" | "all"
   const[mobileListView,setMobileListView]=useState("all"); // "daily" | "project" | "all"
   const[leftPanelView,setLeftPanelView]=useState("all"); // "daily" | "project" | "all"
@@ -1523,7 +1586,7 @@ function doPost(e){
                 {bp.name}
               </span>
           }
-          {GANTT_LINKS[bp.name]&&<a href={GANTT_LINKS[bp.name]} target="_blank" rel="noopener" title="開啟排程甘特圖" onClick={e=>e.stopPropagation()} style={{flexShrink:0,fontSize:10,fontWeight:700,color:"#2E5B8F",background:"#E8EEF5",border:"1px solid #C7D5E4",borderRadius:5,padding:"2px 6px",textDecoration:"none",whiteSpace:"nowrap"}}>📅 排程</a>}
+          <button onClick={e=>{e.stopPropagation();setGanttBp(bp.id);}} title="開啟排程甘特圖" style={{flexShrink:0,fontSize:10,fontWeight:700,color:"#2E5B8F",background:"#E8EEF5",border:"1px solid #C7D5E4",borderRadius:5,padding:"2px 6px",cursor:"pointer",whiteSpace:"nowrap"}}>📅 排程</button>
           <span style={{fontSize:10,color:bpColor+"99",whiteSpace:"nowrap",flexShrink:0}}>{done}/{bp.tasks.length}</span>
           {active>0&&<span style={{fontSize:10,color:"#2563eb",background:"#eff6ff",padding:"1px 5px",borderRadius:6,fontWeight:700,flexShrink:0,whiteSpace:"nowrap"}}>{active}執行</span>}
           {over&&<span style={{fontSize:10,color:"#ef4444",background:"#fff1f2",padding:"1px 5px",borderRadius:6,fontWeight:700,flexShrink:0}}>⚠超</span>}
@@ -1624,6 +1687,7 @@ function doPost(e){
   // ===== DESKTOP =====
   return(
     <div style={{display:"flex",flexDirection:"column",height:"100vh",fontSize:14,overflow:"hidden"}} onClick={()=>setHolidayTip(null)}>
+      {ganttBp&&<GanttModal bp={bigProjects.find(b=>b.id===ganttBp)} onClose={()=>setGanttBp(null)} onAdd={()=>openAddTask(ganttBp)}/>}
       {holidayTip&&(
         <div onClick={e=>e.stopPropagation()} style={{position:"fixed",left:holidayTip.x,top:holidayTip.y,background:"#fffde7",border:"1px solid #f59e0b",borderRadius:4,padding:"4px 10px",fontSize:12,color:"#92400e",fontWeight:700,boxShadow:"2px 3px 8px rgba(0,0,0,.18)",zIndex:1000,whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:5}}>
           🎌 {holidayTip.name}
