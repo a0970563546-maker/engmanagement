@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🏗️ 工程管理系統 Pro</title>
+  <title>🏗️ 專案工程管理</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
@@ -1696,7 +1696,7 @@ function doPost(e){
         <div style={{width:"22%",minWidth:230,display:"flex",flexDirection:"column",borderRight:"1px solid #e2e8f0",overflow:"hidden"}}>
           <div style={{background:"#1d4ed8",color:"white",padding:"10px 14px",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
             <div>
-              <div style={{fontWeight:"bold",fontSize:14}}>🏗️ 工程管理系統 Pro</div>
+              <div style={{fontWeight:"bold",fontSize:14}}>🏗️ 專案工程管理</div>
               <div style={{color:"#93c5fd",fontSize:10,marginTop:2}}>雙擊改名 · 📋 開啟詳情 · ▼▶ 折疊</div>
             </div>
             <div style={{display:"flex",gap:5,alignItems:"center",flexShrink:0}}>
@@ -1801,6 +1801,50 @@ function isEdit(b){if(b.id==="roGateBtn")return false;var t=(b.textContent||"");
 function apply(){if(locked){document.querySelectorAll("button").forEach(function(b){if(isEdit(b)&&!b.hasAttribute("data-rohid")){b.setAttribute("data-rohid","1");b.style.display="none";}});document.querySelectorAll("input,textarea,select").forEach(function(f){if(f.id==="roGateBtn")return;if(!f.hasAttribute("data-rodis")){f.setAttribute("data-rodis",f.disabled?"keep":"set");f.disabled=true;}});document.querySelectorAll("[contenteditable=\"true\"]").forEach(function(c){if(!c.hasAttribute("data-roce")){c.setAttribute("data-roce","1");c.setAttribute("contenteditable","false");}});}else{document.querySelectorAll("[data-rohid]").forEach(function(b){b.style.display="";b.removeAttribute("data-rohid");});document.querySelectorAll("[data-rodis]").forEach(function(f){if(f.getAttribute("data-rodis")!=="keep")f.disabled=false;f.removeAttribute("data-rodis");});document.querySelectorAll("[data-roce]").forEach(function(c){c.setAttribute("contenteditable","true");c.removeAttribute("data-roce");});}}
 var obs=new MutationObserver(function(){if(locked)apply();});try{obs.observe(document.documentElement,{childList:true,subtree:true});}catch(e){}
 btn.addEventListener("click",function(){if(!locked){locked=true;try{sessionStorage.removeItem("engEditUnlocked");}catch(e){}paint();apply();return;}var p=window.prompt("請輸入編輯密碼");if(p===null)return;var enc=new TextEncoder().encode(p);crypto.subtle.digest("SHA-256",enc).then(function(buf){var hex=Array.prototype.map.call(new Uint8Array(buf),function(x){return x.toString(16).padStart(2,"0");}).join("");if(hex===HASH){locked=false;try{sessionStorage.setItem("engEditUnlocked","1");}catch(e){}apply();paint();}else{alert("密碼錯誤，仍為檢視模式");}});});
+})();
+</script>
+
+<script>
+(function(){
+if(window.__engCmpInit)return;window.__engCmpInit=1;
+var HOLS={"2026-01-01":1,"2026-02-14":1,"2026-02-15":1,"2026-02-16":1,"2026-02-17":1,"2026-02-18":1,"2026-02-19":1,"2026-02-20":1,"2026-02-27":1,"2026-02-28":1,"2026-04-03":1,"2026-04-04":1,"2026-04-05":1,"2026-04-06":1,"2026-05-01":1,"2026-06-19":1,"2026-09-25":1,"2026-09-28":1,"2026-10-09":1,"2026-10-10":1,"2026-10-25":1,"2026-10-26":1,"2026-12-25":1,"2027-01-01":1};
+var WD="一二三四五六日",COLORS=["#3E6A8E","#9C6B3E","#5E8C61","#8E5E8C","#A3803B","#4C7A7A"];
+function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function pd(s){s=(s||"").replace(/-/g,"/");var p=s.split("/").map(Number);if(p.length!==3||p.some(isNaN))return null;return new Date(p[0],p[1]-1,p[2]);}
+function off(d){var w=(d.getDay()+6)%7;return w>=5||HOLS[iso(d)]===1;}
+function esc(t){return String(t).replace(/[&<>\"]/g,function(m){return({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"})[m];});}
+function getProjs(){var d=[];try{d=JSON.parse(localStorage.getItem("engMgmtProData")||"[]");}catch(e){}return d.filter(function(b){return !b.isDaily&&!b.archived;});}
+var selected=new Set();
+function renderGantt(projs){var sel=projs.map(function(p,i){return {name:p.name,color:COLORS[(p.__idx||i)%COLORS.length],tasks:(p.tasks||[]).map(function(t){return {name:t.name,s:pd(t.startDate),e:pd(t.endDate),done:t.done};}).filter(function(t){return t.s&&t.e&&t.e>=t.s;})};});
+var all=sel.reduce(function(a,p){return a.concat(p.tasks);},[]);if(!all.length)return "<div style=\"padding:30px;color:#9A948C\">所選專案沒有排程資料。</div>";
+var minD=new Date(Math.min.apply(null,all.map(function(t){return t.s;}))),maxD=new Date(Math.max.apply(null,all.map(function(t){return t.e;})));
+function activeCount(d){return sel.filter(function(p){return p.tasks.some(function(t){return t.s<=d&&d<=t.e&&!off(d);});}).length;}
+var html="",cur=new Date(minD.getFullYear(),minD.getMonth(),1);
+while(cur<=maxD){var y=cur.getFullYear(),m=cur.getMonth(),nd=new Date(y,m+1,0).getDate(),ms=new Date(y,m,1),me=new Date(y,m,nd);
+var rows=sel.map(function(p){return {p:p,ts:p.tasks.filter(function(t){return t.s<=me&&t.e>=ms;})};}).filter(function(r){return r.ts.length;});
+if(rows.length){html+="<div style=\"background:#3A4A5A;color:#fff;font-weight:700;padding:4px 12px;border-radius:4px 4px 0 0;margin-top:10px;font-size:13px\">"+y+"年 "+(m+1)+"月</div><div style=\"overflow-x:auto\"><table style=\"border-collapse:collapse;font-size:11px;background:#fff\"><tr><th style=\"border:1px solid #D8D4CE;padding:2px 6px;background:#EDEAE5;position:sticky;left:0\">專案 / 事項</th>";
+for(var d=1;d<=nd;d++){var dt=new Date(y,m,d),o=off(dt),cf=(sel.length>1&&activeCount(dt)>=2);html+="<th style=\"border:1px solid #D8D4CE;padding:2px 1px;min-width:16px;font-size:10px;"+(cf?"background:#C0392B;color:#fff":(o?"background:#B3A493;color:#fff":"background:#EDEAE5"))+"\">"+d+"<br>"+WD[(dt.getDay()+6)%7]+"</th>";}
+html+="</tr>";
+rows.forEach(function(r){html+="<tr><td colspan=\""+(nd+1)+"\" style=\"border:1px solid #D8D4CE;background:"+r.p.color+"18;color:"+r.p.color+";font-weight:700;padding:2px 8px;text-align:left\">■ "+esc(r.p.name)+"</td></tr>";
+r.ts.forEach(function(t){html+="<tr><td style=\"border:1px solid #D8D4CE;text-align:left;white-space:nowrap;padding:2px 8px;position:sticky;left:0;background:#fff;"+(t.done?"text-decoration:line-through;opacity:.6":"")+"\">"+esc(t.name)+"</td>";
+for(var d2=1;d2<=nd;d2++){var dt2=new Date(y,m,d2),bg="";if(t.s<=dt2&&dt2<=t.e&&!off(dt2))bg="background:"+r.p.color;else if(off(dt2))bg="background:#EDEAE5";html+="<td style=\"border:1px solid #E6E2DC;"+bg+"\"></td>";}html+="</tr>";});});
+html+="</table></div>";}cur.setMonth(cur.getMonth()+1);}
+html+="<div style=\"font-size:11px;color:#9A948C;margin-top:8px\">■ 各色＝不同專案　■ 深灰＝週末/假日　"+(sel.length>1?"<span style=\"color:#C0392B;font-weight:700\">紅欄＝衝突日（2 案以上同日施工）</span>":"")+"</div>";return html;}
+var panel=document.createElement("div");panel.id="engCmpPanel";panel.style.cssText="position:fixed;z-index:50;background:#F7F6F3;overflow:auto;border-left:1px solid #E2DED8;box-sizing:border-box;display:none";document.body.appendChild(panel);
+function build(){var projs=getProjs();projs.forEach(function(p,i){p.__idx=i;});
+var chips=projs.map(function(p,i){var on=selected.has(p.name);return "<button data-nm=\""+esc(p.name)+"\" class=\"engCmpChip\" style=\"border:1px solid "+(on?COLORS[i%COLORS.length]:"#C7D5E4")+";background:"+(on?COLORS[i%COLORS.length]:"#fff")+";color:"+(on?"#fff":"#4A5158")+";border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;cursor:pointer;margin:0 6px 6px 0;font-family:inherit\">"+(on?"✓ ":"")+esc(p.name)+"</button>";}).join("");
+var chosen=projs.filter(function(p){return selected.has(p.name);});
+var body=chosen.length?renderGantt(chosen):"<div style=\"padding:24px 4px;color:#7A756D;font-size:13px;line-height:2\"><b style=\"color:#2E5B8F\">排程比對</b><br>① 看／編輯<b>單一專案</b>：用左側每個專案的「📅 排程」<br>② <b>比對多個專案</b>有無衝突：在上方勾選 2 個以上，紅欄即為同日施工衝突</div>";
+panel.innerHTML="<div style=\"position:sticky;top:0;background:#2E5B8F;color:#fff;padding:10px 14px;font-weight:800;font-size:14px;z-index:2\">📊 排程比對 <span style=\"font-weight:400;font-size:12px;opacity:.85\">勾選專案檢視／比對</span></div><div style=\"padding:10px 14px 4px;background:#FAFAF8;border-bottom:1px solid #EDEAE5\">"+chips+"<button id=\"engCmpAll\" style=\"border:1px solid #2E5B8F;background:#E7EDF5;color:#2E5B8F;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;cursor:pointer;margin:0 6px 6px 0;font-family:inherit\">全部</button><button id=\"engCmpClear\" style=\"border:1px solid #C7D5E4;background:#fff;color:#7A756D;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;cursor:pointer;margin:0 0 6px 0;font-family:inherit\">清除</button></div><div style=\"padding:8px 14px 20px\">"+body+"</div>";
+panel.querySelectorAll(".engCmpChip").forEach(function(b){b.onclick=function(){var nm=b.getAttribute("data-nm");selected.has(nm)?selected.delete(nm):selected.add(nm);build();};});
+var a=panel.querySelector("#engCmpAll");if(a)a.onclick=function(){getProjs().forEach(function(p){selected.add(p.name);});build();};
+var c=panel.querySelector("#engCmpClear");if(c)c.onclick=function(){selected.clear();build();};}
+var rp=null;
+function findRight(){if(rp&&document.contains(rp)&&rp.getBoundingClientRect().width>10)return rp;rp=null;var ba=Infinity,best=null;var ds=document.querySelectorAll("div");for(var i=0;i<ds.length;i++){var e=ds[i];if(e.id==="engCmpPanel")continue;var it=e.innerText||"";if(it.indexOf("大專案群組視圖")<0)continue;var r=e.getBoundingClientRect();if(r.width<10)continue;var ar=r.width*r.height;if(ar<ba){ba=ar;best=e;}}if(!best)return null;var col=best;while(col&&col.parentElement){var r2=col.getBoundingClientRect();var pr=col.parentElement.getBoundingClientRect();if(r2.left>40&&r2.height>300&&pr.left<40){rp=col;return col;}col=col.parentElement;}rp=best;return best;}
+function place(){var el=findRight();if(!el){panel.style.display="none";return;}var r=el.getBoundingClientRect();panel.style.display="";panel.style.left=r.left+"px";panel.style.top=r.top+"px";panel.style.width=r.width+"px";panel.style.height=r.height+"px";}
+build();place();setInterval(place,500);
+var lastData=localStorage.getItem("engMgmtProData")||"";setInterval(function(){var cur=localStorage.getItem("engMgmtProData")||"";if(cur!==lastData){lastData=cur;build();}},1500);
+window.addEventListener("resize",place);
 })();
 </script>
 </body>
