@@ -1783,5 +1783,25 @@ function doPost(e){
 }
 ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 </script>
+
+<style id="ro-gate-style">
+#roGateBtn{position:fixed;top:8px;right:10px;z-index:2147483647;font:600 13px/1.4 "Microsoft JhengHei","PingFang TC",sans-serif;background:#2E5B8F;color:#fff;border:0;border-radius:8px;padding:8px 12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+#roGateBtn.unlocked{background:#9CAF88}
+</style>
+<script>
+(function(){
+var HASH="c180f50f20f140d28d729c3596ae2644f27181c60830542cdb7730e06081e2fe";
+var locked=true;
+try{if(sessionStorage.getItem("engEditUnlocked")==="1")locked=false;}catch(e){}
+var btn=document.createElement("button");btn.id="roGateBtn";btn.type="button";
+function ready(fn){if(document.readyState!=="loading")fn();else document.addEventListener("DOMContentLoaded",fn);}
+ready(function(){if(document.body&&!btn.isConnected)document.body.appendChild(btn);paint();apply();});
+function paint(){btn.textContent=locked?"🔒 檢視模式・點此編輯":"🔓 編輯中・點此鎖定";btn.className=locked?"":"unlocked";}
+function isEdit(b){if(b.id==="roGateBtn")return false;var t=(b.textContent||"");var ti=(b.getAttribute("title")||"");if(t.indexOf("＋")>-1)return true;if(t.indexOf("🗑")>-1)return true;if(t.indexOf("↩")>-1)return true;if(t.indexOf("☁")>-1)return true;if(t.indexOf("🏗")>-1)return true;if(t.indexOf("📦")>-1)return ti.indexOf("封存專案")>-1;return false;}
+function apply(){if(locked){document.querySelectorAll("button").forEach(function(b){if(isEdit(b)&&!b.hasAttribute("data-rohid")){b.setAttribute("data-rohid","1");b.style.display="none";}});document.querySelectorAll("input,textarea,select").forEach(function(f){if(f.id==="roGateBtn")return;if(!f.hasAttribute("data-rodis")){f.setAttribute("data-rodis",f.disabled?"keep":"set");f.disabled=true;}});document.querySelectorAll("[contenteditable=\"true\"]").forEach(function(c){if(!c.hasAttribute("data-roce")){c.setAttribute("data-roce","1");c.setAttribute("contenteditable","false");}});}else{document.querySelectorAll("[data-rohid]").forEach(function(b){b.style.display="";b.removeAttribute("data-rohid");});document.querySelectorAll("[data-rodis]").forEach(function(f){if(f.getAttribute("data-rodis")!=="keep")f.disabled=false;f.removeAttribute("data-rodis");});document.querySelectorAll("[data-roce]").forEach(function(c){c.setAttribute("contenteditable","true");c.removeAttribute("data-roce");});}}
+var obs=new MutationObserver(function(){if(locked)apply();});try{obs.observe(document.documentElement,{childList:true,subtree:true});}catch(e){}
+btn.addEventListener("click",function(){if(!locked){locked=true;try{sessionStorage.removeItem("engEditUnlocked");}catch(e){}paint();apply();return;}var p=window.prompt("請輸入編輯密碼");if(p===null)return;var enc=new TextEncoder().encode(p);crypto.subtle.digest("SHA-256",enc).then(function(buf){var hex=Array.prototype.map.call(new Uint8Array(buf),function(x){return x.toString(16).padStart(2,"0");}).join("");if(hex===HASH){locked=false;try{sessionStorage.setItem("engEditUnlocked","1");}catch(e){}apply();paint();}else{alert("密碼錯誤，仍為檢視模式");}});});
+})();
+</script>
 </body>
 </html>
