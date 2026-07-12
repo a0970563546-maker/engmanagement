@@ -1846,7 +1846,7 @@ var pf=panel.querySelector("#engCmpPdf");if(pf)pf.onclick=exportPdf;}
 var rp=null;
 function findRight(){if(rp&&document.contains(rp)&&rp.getBoundingClientRect().width>10)return rp;rp=null;var ba=Infinity,best=null;var ds=document.querySelectorAll("div");for(var i=0;i<ds.length;i++){var e=ds[i];if(e.id==="engCmpPanel")continue;var it=e.innerText||"";if(it.indexOf("大專案群組視圖")<0)continue;var r=e.getBoundingClientRect();if(r.width<10)continue;var ar=r.width*r.height;if(ar<ba){ba=ar;best=e;}}if(!best)return null;var col=best;while(col&&col.parentElement){var r2=col.getBoundingClientRect();var pr=col.parentElement.getBoundingClientRect();if(r2.left>40&&r2.height>300&&pr.left<40){rp=col;return col;}col=col.parentElement;}rp=best;return best;}
 function place(){var el=findRight();if(!el){panel.style.display="none";return;}var r=el.getBoundingClientRect();panel.style.display="";panel.style.left=r.left+"px";panel.style.top=r.top+"px";panel.style.width=r.width+"px";panel.style.height=r.height+"px";}
-build();place();setInterval(place,500);
+build();place();applyHash();setInterval(place,500);window.addEventListener("hashchange",applyHash);function applyHash(){var h=location.hash||"";var m=/[#&]p=([^&]+)/.exec(h);if(!m)return;var pid=decodeURIComponent(m[1]);var pj=getProjs().filter(function(p){return String(p.id)===String(pid);})[0];if(pj){selected.clear();selected.add(pj.name);build();place();}}
 var lastData=localStorage.getItem("engMgmtProData")||"";setInterval(function(){var cur=localStorage.getItem("engMgmtProData")||"";if(cur!==lastData){lastData=cur;build();}},1500);
 window.addEventListener("resize",place);
 })();
